@@ -28,7 +28,7 @@ install:
   - source /home/travis/.gimme/envs/go1.6.env
   - which go
   - go version
-  # Glide
+  # Glide last
   - cd $TRAVIS_BUILD_DIR
   - githu
   - GOPATH=$TRAVIS_BUILD_DIR/import go get -u $(go list -f '{{join .Imports "\n"}}' ./... | sort | uniq | grep -v "org/jarvis" | grep -v "C")
