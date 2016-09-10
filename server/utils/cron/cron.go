@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron"
 	"github.com/spf13/viper"

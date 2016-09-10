@@ -3,6 +3,8 @@ package dio
 import (
 	"net/http"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/labstack/echo"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
