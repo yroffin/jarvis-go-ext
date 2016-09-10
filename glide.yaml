@@ -9,3 +9,21 @@ import:
 - package: github.com/robfig/cron
 - package: github.com/spf13/cobra
 - package: github.com/spf13/viper
+- package: gopkg.in/gemnasium/logrus-airbrake-hook.v2
+- package: gopkg.in/airbrake/gobrake.v2
+- package: github.com/valyala/fasthttp
+  subpackages:
+  - engine/standard
+  - middleware
+- package: github.com/stretchr/testify/assert
+- package: github.com/cpuguy83/go-md2man/md2man
+- package: github.com/xordataexchange/crypt/config
+- package: github.com/klauspost/compress/flate
+- package: github.com/klauspost/compress/gzip
+- package: github.com/klauspost/compress/zlib
+- package: github.com/valyala/bytebufferpool
+- package: github.com/armon/consul-api
+- package: github.com/coreos/go-etcd/etcd
+- package: github.com/ugorji/go/codec
+- package: github.com/klauspost/crc32
+
