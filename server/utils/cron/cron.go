@@ -38,6 +38,7 @@ func handler() {
 		logger.NewLogger().WithFields(log.Fields{
 			"errors": errs,
 		}).Info("CRON")
+		return
 	}
 
 	if b, err := ioutil.ReadAll(resp.Body); err == nil {
@@ -45,6 +46,11 @@ func handler() {
 			"body":   string(b),
 			"status": resp.Status,
 		}).Info("CRON")
+	} else {
+		logger.NewLogger().WithFields(log.Fields{
+			"body":   string(b),
+			"status": resp.Status,
+		}).Info("WARN")
 	}
 }
 
