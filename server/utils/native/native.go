@@ -3,7 +3,7 @@ package native
 // #cgo arm CFLAGS: -marm
 // #cgo arm LDFLAGS: -lwiringPi
 /*
-#define DEBUG_CONVERT 0
+#define DEBUG_CONVERT_NONE
 // Par Idleman (idleman@idleman.fr - http://blog.idleman.fr)
 // Licence : CC by sa
 // Toutes question sur le blog ou par mail, possibilité de m'envoyer des bières via le blog
