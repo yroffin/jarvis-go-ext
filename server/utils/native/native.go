@@ -3,6 +3,7 @@ package native
 // #cgo arm CFLAGS: -marm
 // #cgo arm LDFLAGS: -lwiringPi
 /*
+#define DEBUG_CONVERT 0
 // Par Idleman (idleman@idleman.fr - http://blog.idleman.fr)
 // Licence : CC by sa
 // Toutes question sur le blog ou par mail, possibilité de m'envoyer des bières via le blog
@@ -31,6 +32,12 @@ void scheduler_standard() {
 		perror("Failed to switch to normal scheduler.");
 	}
 }
+// internal use
+void cariageReturn       (char *message) {
+#ifdef DEBUG_CONVERT
+	fprintf(stderr,"\n%s\n",message);
+#endif
+}
 // Calcul le nombre 2^chiffre indiqué, fonction utilisé par itob pour la conversion decimal/binaire
 unsigned long power2(int power) {
 	unsigned long integer = 1;
@@ -51,6 +58,13 @@ void itob(unsigned long integer, int bit2[26], int length) {
 		} else
 			bit2[i] = 0;
 	}
+#ifdef DEBUG_CONVERT
+	fprintf(stderr,"itob: ");
+	for (i = 0; i < length; i++) {
+		fprintf(stderr,"%01x ", bit2[i]);
+	}
+	fprintf(stderr,"\n");
+#endif
 }
 // Convert
 void itobInterruptor(unsigned long integer, int bit2Interruptor[4], int length) {
@@ -62,12 +76,19 @@ void itobInterruptor(unsigned long integer, int bit2Interruptor[4], int length) 
 		} else
 			bit2Interruptor[i] = 0;
 	}
+#ifdef DEBUG_CONVERT
+	fprintf(stderr,"itobInterruptor: ");
+	for (i = 0; i < length; i++) {
+		fprintf(stderr,"%01x ", bit2Interruptor[i]);
+	}
+	fprintf(stderr,"\n");
+#endif
 }
 // Envois d'une pulsation (passage de l'etat haut a l'etat bas)
 // 1 = 310µs haut puis 1340µs bas
 // 0 = 310µs haut puis 310µs bas
 void sendBit(int pin, int b) {
-	if (b) {
+	if (b == 1) {
 		digitalWrite(pin, 1);
 		delayMicroseconds(310);   //275 orinally, but tweaked.
 		digitalWrite(pin, 0);
@@ -82,12 +103,18 @@ void sendBit(int pin, int b) {
 // Envoie d'une paire de pulsation radio qui definissent 1 bit réel : 0 =01 et 1 =10
 // c'est le codage de manchester qui necessite ce petit bouzin, ceci permet entre autres de dissocier les données des parasites
 void sendPair(int pin, int b) {
-	if (b) {
+	if (b == 1) {
 		sendBit(pin, 1);
 		sendBit(pin, 0);
+#ifdef DEBUG_CONVERT
+		fprintf(stderr,"1 ");
+#endif
 	} else {
-		sendBit(pin, 1);
 		sendBit(pin, 0);
+		sendBit(pin, 1);
+#ifdef DEBUG_CONVERT
+		fprintf(stderr,"0 ");
+#endif
 	}
 }
 // Fonction d'envois du signal
@@ -105,17 +132,28 @@ void transmit(int pin, int bit2[26], int bit2Interruptor[4], int blnOn) {
 	digitalWrite(pin, 0);    // second verrou de 2675µs
 	delayMicroseconds(2675);
 	digitalWrite(pin, 1); // On reviens en état haut pour bien couper les verrous des données
+	cariageReturn("lock");
 
 	// Envoie du code emetteur (272946 = 1000010101000110010  en binaire)
+#ifdef DEBUG_CONVERT
+	fprintf(stderr,"bit2: ");
+	for (i = 0; i < 26; i++) {
+		fprintf(stderr,"%01x ", bit2[i]);
+	}
+	fprintf(stderr,"\n");
+#endif
 	for (i = 0; i < 26; i++) {
 		sendPair(pin, bit2[i]);
 	}
+	cariageReturn("emetteur");
 
 	// Envoie du bit définissant si c'est une commande de groupe ou non (26em bit)
 	sendPair(pin, 0);
+	cariageReturn("groupe");
 
 	// Envoie du bit définissant si c'est allumé ou eteint 27em bit)
 	sendPair(pin, blnOn);
+	cariageReturn("state");
 
 	// Envoie des 4 derniers bits, qui représentent le code interrupteur, ici 0 (encode sur 4 bit donc 0000)
 	// nb: sur  les télécommandes officielle chacon, les interrupteurs sont logiquement nommés de 0 à x
@@ -127,11 +165,12 @@ void transmit(int pin, int bit2[26], int bit2Interruptor[4], int blnOn) {
 			sendPair(pin, 1);
 		}
 	}
+	cariageReturn("interrupteur");
 
 	digitalWrite(pin, 1);   // coupure données, verrou
 	delayMicroseconds(275);      // attendre 275µs
 	digitalWrite(pin, 0); // verrou 2 de 2675µs pour signaler la fermeture du signal
-
+	cariageReturn("fin");
 }
 // Send ON
 int dioOn(int pin, int sender, int interruptor) {
