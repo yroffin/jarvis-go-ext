@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/spf13/viper"
+	ctrlDio "github.com/yroffin/jarvis-go-ext/server/dio"
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native"
 
@@ -20,7 +21,7 @@ func Start() {
 	{ // routes for /api
 		dio := api.Group("/dio")
 		{ // routes for /api/dio
-			dio.Post("", dio.HandlePost)
+			dio.Post("", ctrlDio.HandlePost)
 		}
 	}
 
