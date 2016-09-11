@@ -23,8 +23,7 @@ ${MODULE_ARMEL}:
 	readelf -A /usr/lib/libwiringPi.so
 	# module
 	CC=arm-linux-gnueabi-gcc GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=1 CGO_CFLAGS="-march=armv6j -mfloat-abi=soft" CGO_LDFLAGS="-lwiringPi" go install -installsuffix armel ./...
-	find *
-	mv -f bin/linux_arm/main jarvis-rest-module-0.0.1-SNAPSHOT.armel
+	mv -f ${GOPATH}/bin/linux_arm/jarvis-go-ext ${GOPATH}/jarvis-rest-module-0.0.1-SNAPSHOT.armel
 
 ${MODULE_ARMHF}:
 	# wiringPI
@@ -36,5 +35,5 @@ ${MODULE_ARMHF}:
 	readelf -A /usr/lib/libwiringPi.so
 	# module
 	CC=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 CGO_CFLAGS="" CGO_LDFLAGS="-lwiringPi" go install -installsuffix armhf ./...
-	mv -f bin/linux_arm/main jarvis-rest-module-0.0.1-SNAPSHOT.armhf
+	mv -f ${GOPATH}/bin/linux_arm/jarvis-go-ext ${GOPATH}/jarvis-rest-module-0.0.1-SNAPSHOT.armhf
 
