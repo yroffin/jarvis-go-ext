@@ -12,7 +12,7 @@ import (
 )
 
 // HandlePost : handler for post
-func HandlePost(c echo.Context) error {
+func HandlePost(c echo.Context) {
 	var m *types.DioResource
 	c.Bind(&m)
 
