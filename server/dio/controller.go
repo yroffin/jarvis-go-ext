@@ -12,7 +12,7 @@ import (
 )
 
 // HandlePost : handler for post
-func HandlePost(c echo.Context) {
+func HandlePost(c echo.Context) error {
 	var m *types.DioResource
 	c.Bind(&m)
 
@@ -29,5 +29,5 @@ func HandlePost(c echo.Context) {
 		native.DioOff(m.Pin, m.Sender, m.Interuptor)
 	}
 
-	c.JSON(http.StatusOK, m)
+	return c.JSON(http.StatusOK, m)
 }
