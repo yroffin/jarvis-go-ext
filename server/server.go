@@ -1,9 +1,11 @@
 package server
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
 	ctrlDio "github.com/yroffin/jarvis-go-ext/server/dio"
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
+	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native"
 
 	"github.com/labstack/echo"
@@ -31,6 +33,14 @@ func Start() {
 	// init cron
 	cron.Init("@every 60s")
 
-	port := viper.GetString("jarvis.core.port")
-	e.Run(standard.New(":" + port))
+	// get prot from config
+	intf := viper.GetString("jarvis.module.interface")
+	port := viper.GetString("jarvis.module.port")
+
+	logger.NewLogger().WithFields(log.Fields{
+		"interface": intf,
+		"port":      port,
+	}).Info("DIO")
+
+	e.Run(standard.New(intf + ":" + port))
 }
