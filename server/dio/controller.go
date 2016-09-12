@@ -23,7 +23,7 @@ func HandlePost(c echo.Context) error {
 		"on":          m.On,
 	}).Info("DIO")
 
-	if m.On == "true" {
+	if m.On == true {
 		native.DioOn(m.Pin, m.Sender, m.Interuptor)
 	} else {
 		native.DioOff(m.Pin, m.Sender, m.Interuptor)
