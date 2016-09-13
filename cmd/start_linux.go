@@ -2,8 +2,10 @@ package cmd
 
 /*
 #include <stdio.h>
+#include <string.h>
 #include<signal.h>
 #include<unistd.h>
+#include <stdlib.h>
 void sig_handler(int signo)
 {
   if (signo == SIGHUP)
@@ -14,6 +16,7 @@ void  systemFork() {
     if(child == 0) {
         exit(0);
     } else {
+        fprintf(stderr, "Fork\n");
         // Child process
         if (signal(SIGHUP, sig_handler) == SIG_ERR)
         return;
