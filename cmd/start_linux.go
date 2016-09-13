@@ -13,7 +13,8 @@ void sig_handler(int signo)
 }
 void  systemFork() {
     int child = fork();
-    if(child == 0) {
+    if(child > 0) {
+        fprintf(stderr, "Fork daemon pid = %d\n", child);
         exit(0);
     } else {
         fprintf(stderr, "Fork\n");
