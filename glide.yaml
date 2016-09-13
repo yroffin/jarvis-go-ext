@@ -26,4 +26,5 @@ import:
 - package: github.com/coreos/go-etcd/etcd
 - package: github.com/ugorji/go/codec
 - package: github.com/klauspost/crc32
+- package: github.com/valyala/tcplisten
 
