@@ -14,6 +14,13 @@ void sig_handler(int signo)
   if (signo == SIGHUP)
     fprintf(stderr,"received SIGHUP and continue\n");
 }
+
+void  systemSighup() {
+    if (signal(SIGHUP, sig_handler) == SIG_ERR) {
+        fprintf(stderr, "Error, while setting signal handler\n");
+    }
+}
+
 void  systemFork() {
     int child = fork();
     if(child > 0) {
