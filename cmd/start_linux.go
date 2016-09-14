@@ -19,8 +19,9 @@ void  systemFork() {
     } else {
         fprintf(stderr, "Fork\n");
         // Child process
-        if (signal(SIGHUP, sig_handler) == SIG_ERR)
-        return;
+        if (signal(SIGHUP, sig_handler) == SIG_ERR) {
+            fprintf(stderr, "Error, while setting signal handler\n");
+        }
     }
 }
 */
