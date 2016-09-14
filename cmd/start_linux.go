@@ -6,6 +6,9 @@ package cmd
 #include<signal.h>
 #include<unistd.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 void sig_handler(int signo)
 {
   if (signo == SIGHUP)
@@ -22,6 +25,10 @@ void  systemFork() {
         if (signal(SIGHUP, sig_handler) == SIG_ERR) {
             fprintf(stderr, "Error, while setting signal handler\n");
         }
+        //unmask the file mode
+        umask(0);
+        //set new session
+        sid = setsid();
     }
 }
 */
