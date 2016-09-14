@@ -28,7 +28,7 @@ void  systemFork() {
         //unmask the file mode
         umask(0);
         //set new session
-        sid = setsid();
+        setsid();
     }
 }
 */
