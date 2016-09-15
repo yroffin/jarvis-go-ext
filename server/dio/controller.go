@@ -8,11 +8,12 @@ import (
 	"github.com/labstack/echo"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
+	"github.com/yroffin/jarvis-go-ext/server/utils/native/spi"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
 
 // HandlePost : handler for post
-func HandlePost(c echo.Context) error {
+func HandlePostDio(c echo.Context) error {
 	var m *types.DioResource
 	c.Bind(&m)
 
@@ -28,6 +29,23 @@ func HandlePost(c echo.Context) error {
 	} else {
 		wiringpi.DioOff(m.Pin, m.Sender, m.Interuptor)
 	}
+
+	return c.JSON(http.StatusOK, m)
+}
+
+// HandlePost : handler for post
+func HandlePostSpi(c echo.Context) error {
+	var m *types.DioResource
+	c.Bind(&m)
+
+	logger.NewLogger().WithFields(log.Fields{
+		"pin":         m.Pin,
+		"sender":      m.Sender,
+		"interruptor": m.Interuptor,
+		"on":          m.On,
+	}).Info("SPI")
+
+	spi.SpiOpen()
 
 	return c.JSON(http.StatusOK, m)
 }

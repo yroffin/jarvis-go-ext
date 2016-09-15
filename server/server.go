@@ -23,7 +23,11 @@ func Start() {
 	{ // routes for /api
 		dio := api.Group("/dio")
 		{ // routes for /api/dio
-			dio.Post("", ctrlDio.HandlePost)
+			dio.Post("", ctrlDio.HandlePostDio)
+		}
+		spi := api.Group("/spi")
+		{ // routes for /api/spi
+			spi.Post("", ctrlDio.HandlePostSpi)
 		}
 	}
 
