@@ -1,4 +1,4 @@
-package native
+package wiringpi
 
 // #cgo arm CFLAGS: -marm
 // #cgo arm LDFLAGS: -lwiringPi

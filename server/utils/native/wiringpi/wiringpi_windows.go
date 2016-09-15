@@ -1,4 +1,4 @@
-package native
+package wiringpi
 
 // #include <stdio.h>
 // void  delay             	(unsigned int howLong) {}

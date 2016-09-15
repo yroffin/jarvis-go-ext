@@ -6,7 +6,7 @@ import (
 	ctrlDio "github.com/yroffin/jarvis-go-ext/server/dio"
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
-	"github.com/yroffin/jarvis-go-ext/server/utils/native"
+	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
@@ -28,7 +28,7 @@ func Start() {
 	}
 
 	// init wiringPi library
-	native.InitWiringPi()
+	wiringpi.InitWiringPi()
 
 	// init cron
 	cron.Init("@every 60s")

@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
-	"github.com/yroffin/jarvis-go-ext/server/utils/native"
+	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
 
 // HandlePost : handler for post
@@ -24,9 +24,9 @@ func HandlePost(c echo.Context) error {
 	}).Info("DIO")
 
 	if m.On == true {
-		native.DioOn(m.Pin, m.Sender, m.Interuptor)
+		wiringpi.DioOn(m.Pin, m.Sender, m.Interuptor)
 	} else {
-		native.DioOff(m.Pin, m.Sender, m.Interuptor)
+		wiringpi.DioOff(m.Pin, m.Sender, m.Interuptor)
 	}
 
 	return c.JSON(http.StatusOK, m)
