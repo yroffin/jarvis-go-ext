@@ -1,4 +1,4 @@
-package native
+package wiringpi
 
 // void  delay             	(unsigned int howLong);
 // void  delayMicroseconds 	(unsigned int howLong);
