@@ -3,12 +3,13 @@ package ioctl
 import (
 	"syscall"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 )
 
 // IOCTL : ioctl wrapper
 func IOCTL(fd, op, arg uintptr) error {
-	logger.NewLogger().WithFields(log.Fields{
+	logger.NewLogger().WithFields(logrus.Fields{
 		"fd":  fd,
 		"op":  op,
 		"arg": arg,
