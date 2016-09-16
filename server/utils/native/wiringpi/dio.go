@@ -4,14 +4,6 @@ package wiringpi
 // #cgo arm LDFLAGS: -lwiringPi
 // extern void scheduler_realtime();
 // extern void scheduler_standard();
-// extern void  delay             	(unsigned int howLong);
-// extern void  delayMicroseconds 	(unsigned int howLong);
-// extern unsigned int millis      (void);
-// extern unsigned int micros      (void);
-// extern void digitalWrite        (int pin, int value);
-// extern int  wiringPiSetup       (void);
-// extern void pinMode             (int pin, int mode);
-// extern int  setuid      		(int uid);
 import "C"
 
 const (
@@ -53,21 +45,6 @@ func itob(integer uint64, length int) []int {
 		}
 	}
 	return bit2
-}
-
-// DigitalWrite : call wiringpi digitalWrite
-func DigitalWrite(pin int, value int) {
-	C.digitalWrite(C.int(pin), C.int(value))
-}
-
-// DelayMicroseconds : call wiringpi delayMicroseconds
-func DelayMicroseconds(delay uint) {
-	C.delayMicroseconds(C.uint(delay))
-}
-
-// Delay : call wiringpi delay
-func Delay(delay uint) {
-	C.delay(C.uint(delay))
 }
 
 // Envois d'une pulsation (passage de l'etat haut a l'etat bas)

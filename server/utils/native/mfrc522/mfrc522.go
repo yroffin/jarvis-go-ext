@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/spi"
+	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
 
 const (
@@ -208,9 +209,7 @@ func (mfrc522 *Mfrc522) Init() {
 	mfrc522.spiDevice.SetBitsPerWord(4)
 	mfrc522.spiDevice.SetMode(0)
 
-	GPIO.setmode(GPIO.BOARD)
-	GPIO.setup(22, GPIO.OUT)
-	GPIO.output(self.NRSTPD, 1)
+	wiringpi.PinMode(22, 1)
 
 	mfrc522.Reset()
 	mfrc522.Write(TModeReg, 0x8D)
