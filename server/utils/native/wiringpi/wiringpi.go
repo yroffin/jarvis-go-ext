@@ -2,25 +2,16 @@ package wiringpi
 
 // #cgo arm CFLAGS: -marm
 // #cgo arm LDFLAGS: -lwiringPi
-// extern int dioOn(int pin, int sender, int interruptor);
-// extern int dioOff(int pin, int sender, int interruptor);
-// extern int dioInit();
+// extern int wiringPiSetupInit();
+// extern int pinMode(int pin, int value);
 import "C"
 
-func InitWiringPi() int {
-	return int(C.dioInit())
+// WiringPiInit : initialize the library
+func Init() int {
+	return int(C.wiringPiSetupInit())
 }
 
-/**
- * push ON
- */
-func DioOn(pin int, sender int, interruptor int) int {
-	return int(C.dioOn(C.int(pin), C.int(sender), C.int(interruptor)))
-}
-
-/**
- * push OFF
- */
-func DioOff(pin int, sender int, interruptor int) int {
-	return int(C.dioOff(C.int(pin), C.int(sender), C.int(interruptor)))
+// WinringPiPinMode : set pin mode
+func PinMode(pin int, value int) {
+	C.pinMode(C.int(pin), C.int(value))
 }

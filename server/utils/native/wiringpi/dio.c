@@ -6,6 +6,15 @@
 #include <stdlib.h>
 #include <sched.h>
 
+// extern void  delay             	(unsigned int howLong);
+// extern void  delayMicroseconds 	(unsigned int howLong);
+// extern unsigned int millis      (void);
+// extern unsigned int micros      (void);
+// extern void digitalWrite        (int pin, int value);
+// extern int  wiringPiSetup       (void);
+// extern void pinMode             (int pin, int mode);
+// extern int  setuid      		(int uid);
+
 // Par Idleman (idleman@idleman.fr - http://blog.idleman.fr)
 // Licence : CC by sa
 // Toutes question sur le blog ou par mail, possibilité de m'envoyer des bières via le blog
@@ -38,9 +47,9 @@ void scheduler_standard() {
 	}
 }
 
-//Envois d'une pulsation (passage de l'etat haut a l'etat bas)
-//1 = 310µs haut puis 1340µs bas
-//0 = 310µs haut puis 310µs bas
+// Envois d'une pulsation (passage de l'etat haut a l'etat bas)
+// 1 = 310µs haut puis 1340µs bas
+// 0 = 310µs haut puis 310µs bas
 void sendBit(int pin, bool b) {
 	if (b) {
 		digitalWrite(pin, HIGH);
@@ -55,7 +64,7 @@ void sendBit(int pin, bool b) {
 	}
 }
 
-//Calcul le nombre 2^chiffre indiqué, fonction utilisé par itob pour la conversion decimal/binaire
+// Calcul le nombre 2^chiffre indiqué, fonction utilisé par itob pour la conversion decimal/binaire
 unsigned long power2(int power) {
 	unsigned long integer = 1;
 	int i; for(i = 0; i < power; i++) {
@@ -64,7 +73,7 @@ unsigned long power2(int power) {
 	return integer;
 }
 
-//Convertis un nombre en binaire, nécessite le nombre, et le nombre de bits souhaité en sortie (ici 26)
+// Convertis un nombre en binaire, nécessite le nombre, et le nombre de bits souhaité en sortie (ici 26)
 // Stocke le résultat dans le tableau global "bit2"
 void itob(unsigned long integer, int length, bool bit2[]) {
 	int i; for(i = 0; i < length; i++) {
@@ -167,17 +176,4 @@ int dioOn(int pin, int sender, int interruptor) {
 
 int dioOff(int pin, int sender, int interruptor) {
 	dioSend(pin, sender, interruptor, false);
-}
-
-int dioInit() {
-	if (setuid(0)) {
-		perror("setuid");
-		return 1;
-	}
-
-	//Si on ne trouve pas la librairie wiringPI, on arrête l'execution
-	if (wiringPiSetup() == -1) {
-		perror("Librairie Wiring PI introuvable, veuillez lier cette librairie...");
-		return -1;
-	}
 }

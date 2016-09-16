@@ -1,3 +1,0 @@
-package spi
-
-import "C"

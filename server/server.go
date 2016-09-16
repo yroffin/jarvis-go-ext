@@ -32,7 +32,7 @@ func Start() {
 	}
 
 	// init wiringPi library
-	wiringpi.InitWiringPi()
+	wiringpi.Init()
 
 	// init cron
 	cron.Init("@every 60s")
