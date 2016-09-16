@@ -4,6 +4,8 @@ package wiringpi
 // #cgo arm LDFLAGS: -lwiringPi
 // extern void scheduler_realtime();
 // extern void scheduler_standard();
+// extern int dioOn(int pin, int sender, int interruptor);
+// extern int dioOff(int pin, int sender, int interruptor);
 import "C"
 
 const (
@@ -14,12 +16,14 @@ const (
 
 // On : send on
 func On(pin int, sender uint64, interruptor uint64) {
-	Send(pin, sender, interruptor, HIGH)
+	C.dioOn(C.int(pin), C.int(sender), C.int(interruptor))
+	//Send(pin, sender, interruptor, HIGH)
 }
 
 // Off : send off
 func Off(pin int, sender uint64, interruptor uint64) {
-	Send(pin, sender, interruptor, LOW)
+	C.dioOff(C.int(pin), C.int(sender), C.int(interruptor))
+	//Send(pin, sender, interruptor, LOW)
 }
 
 // Calcul le nombre 2^chiffre indiqué, fonction utilisé par itob pour la conversion decimal/binaire
