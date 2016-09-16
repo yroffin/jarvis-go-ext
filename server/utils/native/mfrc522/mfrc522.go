@@ -2,6 +2,7 @@ package mfrc522
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/spi"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
@@ -200,9 +201,20 @@ func (mfrc522 *Mfrc522) Auth() {
 func (mfrc522 *Mfrc522) DumpClassic1K() {
 }
 
+var instance *Mfrc522
+var once sync.Once
+
+// GetInstance : singleton instance
+func GetInstance() *Mfrc522 {
+	once.Do(func() {
+		instance = new(Mfrc522)
+		instance.Init()
+	})
+	return instance
+}
+
 // Init : Init
 func (mfrc522 *Mfrc522) Init() {
-	mfrc522 = new(Mfrc522)
 	mfrc522.spiDevice = spi.NewSPIDevice(0, 0)
 	mfrc522.spiDevice.Open()
 	mfrc522.spiDevice.SetSpeed(1000000)
