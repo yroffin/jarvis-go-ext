@@ -7,6 +7,7 @@ package wiringpi
 // extern int dioOn(int pin, int sender, int interruptor);
 // extern int dioOff(int pin, int sender, int interruptor);
 import "C"
+import "github.com/spf13/viper"
 
 const (
 	OUTPUT = 1
@@ -16,14 +17,20 @@ const (
 
 // On : send on
 func On(pin int, sender uint64, interruptor uint64) {
-	C.dioOn(C.int(pin), C.int(sender), C.int(interruptor))
-	//Send(pin, sender, interruptor, HIGH)
+	if viper.GetString("jarvis.option.wiringpi") == "false" {
+		C.dioOn(C.int(pin), C.int(sender), C.int(interruptor))
+	} else {
+		Send(pin, sender, interruptor, HIGH)
+	}
 }
 
 // Off : send off
 func Off(pin int, sender uint64, interruptor uint64) {
-	C.dioOff(C.int(pin), C.int(sender), C.int(interruptor))
-	//Send(pin, sender, interruptor, LOW)
+	if viper.GetString("jarvis.option.wiringpi") == "false" {
+		C.dioOff(C.int(pin), C.int(sender), C.int(interruptor))
+	} else {
+		Send(pin, sender, interruptor, LOW)
+	}
 }
 
 // Calcul le nombre 2^chiffre indiqué, fonction utilisé par itob pour la conversion decimal/binaire
