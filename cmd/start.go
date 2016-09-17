@@ -35,7 +35,7 @@ func init() {
 	startFlags.String("daemon", "false", "set daemon mode")
 	startFlags.String("jarvis.option.mfrc522", "false", "mfrc522 init on start")
 	startFlags.String("jarvis.option.wiringpi", "false", "wiringpi init on start")
-	startFlags.String("jarvis.option.wiringpi.alt", "false", "alternate code")
+	startFlags.String("jarvis.option.wiringpi.alt", "true", "alternate code")
 	startFlags.String("jarvis.option.advertise", "true", "advertise jarvis")
 
 	viper.BindPFlag("jarvis.module.port", startFlags.Lookup("jarvis.module.port"))
