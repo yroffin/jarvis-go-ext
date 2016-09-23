@@ -1,20 +1,18 @@
 package logger
 
-import (
-	log "github.com/Sirupsen/logrus"
-)
+import "github.com/Sirupsen/logrus"
 
 // Log : log
-var Log *log.Logger
+var Log *logrus.Logger
 
 // NewLogger : new logger
-func NewLogger() *log.Logger {
+func NewLogger() *logrus.Logger {
 	if Log != nil {
 		return Log
 	}
 
-	Log = log.New()
-	Log.Formatter = new(log.JSONFormatter)
+	Log = logrus.New()
+	Log.Formatter = new(logrus.TextFormatter)
 
 	return Log
 }

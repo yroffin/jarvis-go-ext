@@ -15,7 +15,7 @@ import:
   subpackages:
   - engine/standard
   - middleware
-- package: github.com/stretchr/testify/assert
+- package: github.com/stretchr/testify
 - package: github.com/cpuguy83/go-md2man/md2man
 - package: github.com/xordataexchange/crypt/config
 - package: github.com/klauspost/compress/flate
@@ -27,4 +27,3 @@ import:
 - package: github.com/ugorji/go/codec
 - package: github.com/klauspost/crc32
 - package: github.com/valyala/tcplisten
-

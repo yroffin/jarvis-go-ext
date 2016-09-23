@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/spi"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
 
 const (
+	MAX_LEN = 16
+
 	PCD_IDLE       = 0x00
 	PCD_AUTHENT    = 0x0E
 	PCD_RECEIVE    = 0x08
@@ -113,22 +117,43 @@ type Mfrc522 struct {
 
 // Write : write on mfrc522 component
 func (mfrc522 *Mfrc522) Write(addr byte, val byte) {
-	mfrc522.spiDevice.Send([]byte{(addr << 1) & 0x7E, val})
+	var err error
+	_, err = mfrc522.spiDevice.Send([]byte{(addr << 1) & 0x7E, val})
+	if err != nil {
+		logger.NewLogger().WithFields(logrus.Fields{
+			"addr":  fmt.Sprintf("%02x", addr),
+			"Error": err,
+		}).Error("Write")
+	} else {
+		logger.NewLogger().WithFields(logrus.Fields{
+			"addr": fmt.Sprintf("%02x", addr),
+			"val":  fmt.Sprintf("%02x", val),
+		}).Debug("Write")
+	}
 }
 
 // Read : read on mfrc522 component
 func (mfrc522 *Mfrc522) Read(addr byte) (byte, error) {
 	var value []byte
 	var err error
-	value, err = mfrc522.spiDevice.Send([]byte{(addr<<1)&0x7E | 0x80, 0})
+	value, err = mfrc522.spiDevice.Send([]byte{((addr << 1) & 0x7E) | 0x80, 0})
 	if err != nil {
-		return 0, fmt.Errorf("Error on sending: %s\n", err)
+		logger.NewLogger().WithFields(logrus.Fields{
+			"addr":  fmt.Sprintf("%02x", addr),
+			"Error": err,
+		}).Error("Read")
+		return 0, err
 	}
+	logger.NewLogger().WithFields(logrus.Fields{
+		"addr": fmt.Sprintf("%02x", addr),
+		"val":  fmt.Sprintf("%02x", value[1]),
+	}).Debug("Read")
 	return value[1], nil
 }
 
 // Reset : reset mfrc522 component
 func (mfrc522 *Mfrc522) Reset() {
+	logger.NewLogger().WithFields(logrus.Fields{}).Info("Reset")
 	mfrc522.Write(CommandReg, PCD_RESETPHASE)
 }
 
@@ -137,6 +162,10 @@ func (mfrc522 *Mfrc522) SetBitMask(reg byte, mask byte) {
 	var value byte
 	value, _ = mfrc522.Read(reg)
 	mfrc522.Write(reg, value|mask)
+	logger.NewLogger().WithFields(logrus.Fields{
+		"reg":  fmt.Sprintf("%02x", reg),
+		"mask": fmt.Sprintf("%02x", value|mask),
+	}).Info("SetBitMask")
 }
 
 // ClearBitMask : reset bit mask
@@ -144,6 +173,13 @@ func (mfrc522 *Mfrc522) ClearBitMask(reg byte, mask byte) {
 	var value byte
 	value, _ = mfrc522.Read(reg)
 	mfrc522.Write(reg, value&(^mask))
+	logger.NewLogger().WithFields(logrus.Fields{
+		"reg":           fmt.Sprintf("%02x", reg),
+		"value":         fmt.Sprintf("%02x", value),
+		"value/bitwise": fmt.Sprintf("%02x", ^mask),
+		"mask":          fmt.Sprintf("%02x", mask),
+		"mask/write":    fmt.Sprintf("%02x", value&(^mask)),
+	}).Info("ClearBitMask")
 }
 
 // AntennaOn : set antenna on
@@ -153,20 +189,183 @@ func (mfrc522 *Mfrc522) AntennaOn() {
 	if ^(value & 0x03) > 0 {
 		mfrc522.SetBitMask(TxControlReg, 0x03)
 	}
+	logger.NewLogger().WithFields(logrus.Fields{}).Info("AntennaOn")
 }
 
 // AntennaOff : set antenna off
 func (mfrc522 *Mfrc522) AntennaOff() {
 	mfrc522.ClearBitMask(TxControlReg, 0x03)
+	logger.NewLogger().WithFields(logrus.Fields{}).Info("AntennaOff")
 }
 
 // StopCrypto1 : set antenna off
 func (mfrc522 *Mfrc522) StopCrypto1() {
 	mfrc522.ClearBitMask(Status2Reg, 0x08)
+	logger.NewLogger().WithFields(logrus.Fields{}).Info("StopCrypto1")
+}
+
+// appendByte : internal append function to array
+func appendByte(slice []byte, data ...byte) []byte {
+	m := len(slice)
+	n := m + len(data)
+	if n > cap(slice) { // if necessary, reallocate
+		// allocate double what's needed, for future growth.
+		newSlice := make([]byte, (n+1)*2)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0:n]
+	copy(slice[m:n], data)
+	return slice
 }
 
 // ToCard : write to card
-func (mfrc522 *Mfrc522) ToCard() {
+func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte) (int, []byte, int) {
+	var status = MI_ERR
+	var commIrqValue byte = 0x00
+	var backData = make([]byte, 0)
+	var backLen int
+	var irqEn byte = 0x00
+	var waitIRq byte = 0x00
+
+	var buffer string
+	for i := 0; i < len(sendData); i++ {
+		if i == 0 {
+			buffer = buffer + fmt.Sprintf("0x%02x", sendData[i])
+		} else {
+			buffer = buffer + fmt.Sprintf(",0x%02x", sendData[i])
+		}
+	}
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"command":  fmt.Sprintf("%02x", command),
+		"sendData": buffer,
+	}).Info("ToCard")
+
+	if command == PCD_AUTHENT {
+		// Bit 4 IdleIEn : allows the idle interrupt request (IdleIRq bit) to be propagated to pin IRQ
+		// Bit 1 ErrIEn : allows the error interrupt request (ErrIRq bit) to be propagated to pin IRQ
+		irqEn = 0x12
+		waitIRq = 0x10
+	}
+
+	if command == PCD_TRANSCEIVE {
+		// Bit 6 TxIEn : allows the transmitter interrupt request (TxIRq bit) to be propagated to pin IRQ
+		// Bit 5 RxIEn : allows the receiver interrupt request (RxIRq bit) to be propagated to pin IRQ
+		// Bit 4 IdleIEn : allows the idle interrupt request (IdleIRq bit) to be propagated to pin IRQ
+		// Bit 2 LoAlertIEn : allows the low alert interrupt request (LoAlertIRq bit) to be propagated to pin IRQ
+		// Bit 1 ErrIEn : allows the error interrupt request (ErrIRq bit) to be propagated to pin IRQ
+		// Bit 0 TimerIEn : allows the timer interrupt request (TimerIRq bit) to be propagated to pin IRQ
+		irqEn = 0x77
+		waitIRq = 0x30
+	}
+
+	// 0x80 : signal on pin IRQ is inverted with respect to the Status1Reg register’s IRq bit
+	mfrc522.Write(CommIEnReg, irqEn|0x80)
+	// 0x80 : indicates that the marked bits in the ComIrqReg register are set
+	mfrc522.ClearBitMask(CommIrqReg, 0x80)
+	// 0x80 : immediately clears the internal FIFO buffer’s read and write pointer and ErrorReg register’s BufferOvfl bit
+	mfrc522.SetBitMask(FIFOLevelReg, 0x80)
+	// Clear any command
+	mfrc522.Write(CommandReg, PCD_IDLE)
+	// Write data
+	for i := 0; i < len(sendData); i++ {
+		mfrc522.Write(FIFODataReg, sendData[i])
+	}
+
+	mfrc522.Write(CommandReg, command)
+
+	if command == PCD_TRANSCEIVE {
+		// StartSend : starts the transmission of data, only valid in combination with the Transceive command
+		mfrc522.SetBitMask(BitFramingReg, 0x80)
+	}
+
+	var index = 2000
+	var stop = false
+	for ; index > 0 && stop == false; index-- {
+		// ComIrqReg register bit descriptions
+		commIrqValue, _ = mfrc522.Read(CommIrqReg)
+		stop = ((commIrqValue & 0x01) == 0x00) && ((commIrqValue & waitIRq) == 0x00)
+	}
+	logger.NewLogger().WithFields(logrus.Fields{
+		"TimerIRq":   (commIrqValue & 0x01) == 0x01,
+		"ErrIRq":     (commIrqValue & 0x02) == 0x02,
+		"LoAlertIRq": (commIrqValue & 0x04) == 0x04,
+		"HiAlertIRq": (commIrqValue & 0x08) == 0x08,
+		"IdleIRq":    (commIrqValue & 0x10) == 0x10,
+		"RxIRq":      (commIrqValue & 0x20) == 0x20,
+		"TxIRq":      (commIrqValue & 0x40) == 0x40,
+		"Set1":       (commIrqValue & 0x80) == 0x80,
+	}).Info("ToCard::commIrqValue")
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"index": index,
+	}).Info("ToCard")
+
+	mfrc522.ClearBitMask(BitFramingReg, 0x80)
+
+	if index != 0 {
+		var errorValue byte
+		errorValue, _ = mfrc522.Read(ErrorReg)
+		logger.NewLogger().WithFields(logrus.Fields{
+			"ProtocolErr": (errorValue & 0x01) == 0x01,
+			"ParityErr":   (errorValue & 0x02) == 0x02,
+			"CrcErr":      (errorValue & 0x04) == 0x04,
+			"ColErr":      (errorValue & 0x08) == 0x08,
+			"BufferOvfl":  (errorValue & 0x10) == 0x10,
+			"Reserved":    (errorValue & 0x20) == 0x20,
+			"TempErr":     (errorValue & 0x40) == 0x40,
+			"WrErr":       (errorValue & 0x80) == 0x80,
+		}).Info("ToCard::errorValue")
+		if (errorValue & 0x1B) == 0x00 {
+			status = MI_OK
+
+			if (commIrqValue & irqEn & 0x01) != 0x00 {
+				status = MI_NOTAGERR
+				logger.NewLogger().WithFields(logrus.Fields{
+					"status": status,
+				}).Info("ToCard::MI_NOTAGERR")
+			}
+
+			if command == PCD_TRANSCEIVE {
+				var lastBits byte
+				var fifoLevelValue, _ = mfrc522.Read(FIFOLevelReg)
+				lastBits, _ = mfrc522.Read(ControlReg)
+				// RxLastBits[2:0]
+				// if this value is 000b, the whole byte is valid
+				if (lastBits & 0x07) != 0x00 {
+					backLen = int((fifoLevelValue-1)*8 + lastBits)
+				} else {
+					backLen = int(fifoLevelValue * 8)
+				}
+				if fifoLevelValue == 0 {
+					fifoLevelValue = 1
+				}
+				if fifoLevelValue > MAX_LEN {
+					fifoLevelValue = MAX_LEN
+				}
+				logger.NewLogger().WithFields(logrus.Fields{
+					"fifoLevelValue": fmt.Sprintf("%08x", fifoLevelValue),
+					"lastBits":       fmt.Sprintf("%08x", lastBits),
+					"backLen":        fmt.Sprintf("%08x", backLen),
+				}).Info("ToCard::PCD_TRANSCEIVE")
+				for i := 0; i < int(fifoLevelValue); i++ {
+					var data, _ = mfrc522.Read(FIFODataReg)
+					backData = append(backData, data)
+				}
+			}
+		} else {
+			status = MI_ERR
+		}
+	}
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"status":   status,
+		"backData": backData,
+		"backLen":  backLen,
+	}).Info("ToCard::result")
+
+	return status, backData, backLen
 }
 
 // ReadCard : read from card
@@ -178,11 +377,81 @@ func (mfrc522 *Mfrc522) WriteCard() {
 }
 
 // Request : request
-func (mfrc522 *Mfrc522) Request() {
+func (mfrc522 *Mfrc522) Request(reqMode byte) (int, []byte) {
+	var tagType []byte = make([]byte, 1)
+	tagType[0] = reqMode
+
+	mfrc522.Write(BitFramingReg, 0x07)
+	var status, backData, backLen = mfrc522.ToCard(PCD_TRANSCEIVE, tagType)
+
+	var buffer string
+	for i := 0; i < len(backData); i++ {
+		if i == 0 {
+			buffer = buffer + fmt.Sprintf("0x%02x", backData[i])
+		} else {
+			buffer = buffer + fmt.Sprintf(",0x%02x", backData[i])
+		}
+	}
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"reqMode":  fmt.Sprintf("%02x", reqMode),
+		"status":   fmt.Sprintf("%02x", status),
+		"backData": buffer,
+		"backLen":  fmt.Sprintf("%02x", backLen),
+	}).Info("Request")
+
+	if (status != MI_OK) || (backLen != 0x10) {
+		status = MI_ERR
+	} else {
+		status = MI_OK
+	}
+
+	return status, backData
 }
 
-// Anticoll : write to card
-func (mfrc522 *Mfrc522) Anticoll() {
+// Anticoll : dump anticoll
+func (mfrc522 *Mfrc522) Anticoll() (int, []byte) {
+	var serNum = make([]byte, 0)
+
+	mfrc522.Write(BitFramingReg, 0x00)
+
+	serNum = append(serNum, PICC_ANTICOLL)
+	serNum = append(serNum, 0x20)
+
+	var status, backData, backBits = mfrc522.ToCard(PCD_TRANSCEIVE, serNum)
+
+	var buffer string
+	for i := 0; i < len(backData); i++ {
+		if i == 0 {
+			buffer = buffer + fmt.Sprintf("0x%02x", backData[i])
+		} else {
+			buffer = buffer + fmt.Sprintf(",0x%02x", backData[i])
+		}
+	}
+
+	if status == MI_OK {
+		if len(backData) == 5 {
+			var index = 0
+			var serNumCheck byte = 0
+			for i := 0; i < 4; i++ {
+				serNumCheck = serNumCheck ^ backData[i]
+				index++
+			}
+			if serNumCheck != backData[index] {
+				status = MI_ERR
+			}
+		} else {
+			status = MI_ERR
+		}
+	}
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"status":   fmt.Sprintf("%02x", status),
+		"backData": buffer,
+		"backBits": fmt.Sprintf("%02x", backBits),
+	}).Info("Anticoll")
+
+	return status, backData
 }
 
 // CalulateCRC : compute CRC
@@ -194,11 +463,58 @@ func (mfrc522 *Mfrc522) SelectTag() {
 }
 
 // Auth : Auth
-func (mfrc522 *Mfrc522) Auth() {
+func (mfrc522 *Mfrc522) Auth(authMode byte, blockAddr byte, sectorkey []byte, serNum [4]byte) int {
+	var buff = make([]byte, 0)
+	// First byte should be the authMode (A or B)
+	buff = append(buff, authMode)
+	// Second byte is the trailerBlock (usually 7)
+	buff = append(buff, blockAddr)
+	// Now we need to append the authKey which usually is 6 bytes of 0xFF
+	for i := 0; i < len(sectorkey); i++ {
+		buff = append(buff, sectorkey[i])
+	}
+	// Next we append the first 4 bytes of the UID
+	for i := 0; i < 4; i++ {
+		buff = append(buff, serNum[i])
+	}
+	// Now we start the authentication itself
+	var status, _, _ = mfrc522.ToCard(PCD_AUTHENT, buff)
+	// Check result
+	if status != MI_OK {
+		// Error
+		logger.NewLogger().WithFields(logrus.Fields{
+			"status": status,
+		}).Error("Auth::ToCard")
+	}
+	var statusValue, _ = mfrc522.Read(Status2Reg)
+	if (statusValue & 0x08) != 0 {
+		// Error
+		logger.NewLogger().WithFields(logrus.Fields{
+			"statusValue": statusValue,
+		}).Error("Auth::Read")
+	}
+	return status
 }
 
 // DumpClassic1K : DumpClassic1K
-func (mfrc522 *Mfrc522) DumpClassic1K() {
+func (mfrc522 *Mfrc522) DumpClassic1K(key []byte, uid [4]byte) {
+	logger.NewLogger().WithFields(logrus.Fields{
+		"key": key,
+		"uid": uid,
+	}).Info("DumpClassic1K")
+
+	for i := 0; i < 64; i++ {
+		var status int = mfrc522.Auth(PICC_AUTHENT1A, byte(i), key, uid)
+		// Check if authenticated
+		if status == MI_OK {
+			mfrc522.Read(byte(i))
+		} else {
+			// Error
+			logger.NewLogger().WithFields(logrus.Fields{
+				"status": status,
+			}).Error("DumpClassic1K")
+		}
+	}
 }
 
 var instance *Mfrc522
@@ -218,10 +534,13 @@ func (mfrc522 *Mfrc522) Init() {
 	mfrc522.spiDevice = spi.NewSPIDevice(0, 0)
 	mfrc522.spiDevice.Open()
 	mfrc522.spiDevice.SetSpeed(1000000)
-	mfrc522.spiDevice.SetBitsPerWord(4)
+	mfrc522.spiDevice.SetBitsPerWord(8)
 	mfrc522.spiDevice.SetMode(0)
 
+	logger.NewLogger().WithFields(logrus.Fields{}).Info("SetPinMode")
 	wiringpi.PinMode(22, 1)
+	wiringpi.DigitalWrite(22, 1)
+	wiringpi.DigitalWrite(22, 1)
 
 	mfrc522.Reset()
 	mfrc522.Write(TModeReg, 0x8D)
@@ -231,4 +550,6 @@ func (mfrc522 *Mfrc522) Init() {
 	mfrc522.Write(TxAutoReg, 0x40)
 	mfrc522.Write(ModeReg, 0x3D)
 	mfrc522.AntennaOn()
+
+	logger.NewLogger().WithFields(logrus.Fields{}).Info("Init")
 }

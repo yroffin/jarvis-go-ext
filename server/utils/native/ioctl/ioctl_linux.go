@@ -1,23 +1,16 @@
 package ioctl
 
-import (
-	"syscall"
+// extern int ioctl_debug(void * pointer);
+import "C"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
-)
+import "syscall"
 
-// IOCTL : ioctl wrapper
-func IOCTL(fd, op, arg uintptr) error {
-	logger.NewLogger().WithFields(logrus.Fields{
-		"fd":  fd,
-		"op":  op,
-		"arg": arg,
-	}).Info("Ioctl")
-
-	_, _, ep := syscall.Syscall(syscall.SYS_IOCTL, fd, op, arg)
-	if ep != 0 {
-		return syscall.Errno(ep)
+// IOCTL send ioctl
+func IOCTL(fd, name, data uintptr) error {
+	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, name, data)
+	if err != 0 {
+		return syscall.Errno(err)
 	}
+	//C.ioctl_debug(unsafe.Pointer(data))
 	return nil
 }

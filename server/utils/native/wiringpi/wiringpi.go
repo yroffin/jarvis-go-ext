@@ -7,6 +7,7 @@ package wiringpi
 // extern void  delayMicroseconds 	(unsigned int howLong);
 // extern void digitalWrite        (int pin, int value);
 // extern int  wiringPiSetup       (void);
+// extern int  wiringPiMode;
 // extern void pinMode             (int pin, int mode);
 // extern int  setuid      		(int uid);
 import "C"
