@@ -10,6 +10,10 @@ import (
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
 
+/**
+ * Cf. https://github.com/pkourany/RC522_RFID/blob/master/RFID.cpp
+ */
+
 const (
 	MAX_LEN = 16
 
@@ -43,9 +47,9 @@ const (
 const (
 	Reserved00    = 0x00
 	CommandReg    = 0x01
-	CommIEnReg    = 0x02
+	ComIEnReg     = 0x02
 	DivlEnReg     = 0x03
-	CommIrqReg    = 0x04
+	ComIrqReg     = 0x04
 	DivIrqReg     = 0x05
 	ErrorReg      = 0x06
 	Status1Reg    = 0x07
@@ -118,7 +122,9 @@ type Mfrc522 struct {
 // Write : write on mfrc522 component
 func (mfrc522 *Mfrc522) Write(addr byte, val byte) {
 	var err error
+	wiringpi.DigitalWrite(22, 0)
 	_, err = mfrc522.spiDevice.Send([]byte{(addr << 1) & 0x7E, val})
+	wiringpi.DigitalWrite(22, 1)
 	if err != nil {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"addr":  fmt.Sprintf("%02x", addr),
@@ -136,7 +142,9 @@ func (mfrc522 *Mfrc522) Write(addr byte, val byte) {
 func (mfrc522 *Mfrc522) Read(addr byte) (byte, error) {
 	var value []byte
 	var err error
+	wiringpi.DigitalWrite(22, 0)
 	value, err = mfrc522.spiDevice.Send([]byte{((addr << 1) & 0x7E) | 0x80, 0})
+	wiringpi.DigitalWrite(22, 1)
 	if err != nil {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"addr":  fmt.Sprintf("%02x", addr),
@@ -261,14 +269,14 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte) (int, []byte, int)
 	}
 
 	// 0x80 : signal on pin IRQ is inverted with respect to the Status1Reg register’s IRq bit
-	mfrc522.Write(CommIEnReg, irqEn|0x80)
+	mfrc522.Write(ComIEnReg, irqEn|0x80)
 	// 0x80 : indicates that the marked bits in the ComIrqReg register are set
-	mfrc522.ClearBitMask(CommIrqReg, 0x80)
+	mfrc522.ClearBitMask(ComIrqReg, 0x80)
 	// 0x80 : immediately clears the internal FIFO buffer’s read and write pointer and ErrorReg register’s BufferOvfl bit
 	mfrc522.SetBitMask(FIFOLevelReg, 0x80)
 	// Clear any command
 	mfrc522.Write(CommandReg, PCD_IDLE)
-	// Write data
+	// Write data in fifo tunnel
 	for i := 0; i < len(sendData); i++ {
 		mfrc522.Write(FIFODataReg, sendData[i])
 	}
@@ -284,7 +292,9 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte) (int, []byte, int)
 	var stop = false
 	for ; index > 0 && stop == false; index-- {
 		// ComIrqReg register bit descriptions
-		commIrqValue, _ = mfrc522.Read(CommIrqReg)
+		// CommIrqReg[7..0]
+		// Set1 TxIRq RxIRq IdleIRq HiAlerIRq LoAlertIRq ErrIRq TimerIRq
+		commIrqValue, _ = mfrc522.Read(ComIrqReg)
 		stop = ((commIrqValue & 0x01) == 0x00) && ((commIrqValue & waitIRq) == 0x00)
 	}
 	logger.NewLogger().WithFields(logrus.Fields{
@@ -302,6 +312,7 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte) (int, []byte, int)
 		"index": index,
 	}).Info("ToCard")
 
+	// StartSend : stop the transmission of data
 	mfrc522.ClearBitMask(BitFramingReg, 0x80)
 
 	if index != 0 {
@@ -331,6 +342,10 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte) (int, []byte, int)
 				var lastBits byte
 				var fifoLevelValue, _ = mfrc522.Read(FIFOLevelReg)
 				lastBits, _ = mfrc522.Read(ControlReg)
+				logger.NewLogger().WithFields(logrus.Fields{
+					"fifoLevelValue": fmt.Sprintf("%08x", fifoLevelValue),
+					"lastBits":       fmt.Sprintf("%08x", lastBits),
+				}).Info("ToCard::PCD_TRANSCEIVE::check")
 				// RxLastBits[2:0]
 				// if this value is 000b, the whole byte is valid
 				if (lastBits & 0x07) != 0x00 {
@@ -369,7 +384,21 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte) (int, []byte, int)
 }
 
 // ReadCard : read from card
-func (mfrc522 *Mfrc522) ReadCard() {
+func (mfrc522 *Mfrc522) ReadCard(blockAddr byte) (byte, []byte, error) {
+	var recvData []byte = make([]byte, 0)
+	recvData = append(recvData, PICC_READ)
+	recvData = append(recvData, blockAddr)
+	var crc = mfrc522.calulateCRC(recvData)
+	recvData = append(recvData, crc[0])
+	recvData = append(recvData, crc[1])
+	var status, backData, _ = mfrc522.ToCard(PCD_TRANSCEIVE, recvData)
+	if status != MI_OK {
+		return blockAddr, recvData, fmt.Errorf("Error while reading !")
+	}
+	if len(backData) == 16 {
+		return blockAddr, backData, nil
+	}
+	return blockAddr, recvData, fmt.Errorf("Internal error")
 }
 
 // WriteCard : write from card
@@ -377,12 +406,24 @@ func (mfrc522 *Mfrc522) WriteCard() {
 }
 
 // Request : request
+// Output tagType
+// 0x4400 = Mifare_UltraLight
+// 0x0400 = Mifare_One(S50)
+// 0x0200 = Mifare_One(S70)
+// 0x0800 = Mifare_Pro(X)
+// 0x4403 = Mifare_DESFire
 func (mfrc522 *Mfrc522) Request(reqMode byte) (int, []byte) {
 	var tagType []byte = make([]byte, 1)
 	tagType[0] = reqMode
 
+	// TxLastBits[2:0]
+	// used for transmission of bit oriented frames: defines the number of bits of the last byte that will be transmitted
 	mfrc522.Write(BitFramingReg, 0x07)
 	var status, backData, backLen = mfrc522.ToCard(PCD_TRANSCEIVE, tagType)
+
+	if (status != MI_OK) || (backLen != 0x10) {
+		status, backData, backLen = mfrc522.ToCard(PCD_TRANSCEIVE, tagType)
+	}
 
 	var buffer string
 	for i := 0; i < len(backData); i++ {
@@ -455,15 +496,61 @@ func (mfrc522 *Mfrc522) Anticoll() (int, []byte) {
 }
 
 // CalulateCRC : compute CRC
-func (mfrc522 *Mfrc522) CalulateCRC() {
+func (mfrc522 *Mfrc522) calulateCRC(pIndata []byte) []byte {
+	mfrc522.ClearBitMask(DivIrqReg, 0x04)  // CRCIrq = 0
+	mfrc522.SetBitMask(FIFOLevelReg, 0x80) // FIFO
+
+	// write data
+	for i := 0; i < len(pIndata); i++ {
+		mfrc522.Write(FIFODataReg, pIndata[i])
+	}
+	mfrc522.Write(CommandReg, PCD_CALCCRC)
+
+	// Iterate on CRC compute
+	var n, _ = mfrc522.Read(DivIrqReg)
+	for i := 255; (i > 0) && ((int(n) & 0x04) == 0x00); i-- {
+		n, _ = mfrc522.Read(DivIrqReg)
+	}
+
+	// Store CRC result
+	var pOutData = make([]byte, 2)
+	pOutData[0], _ = mfrc522.Read(CRCResultRegL)
+	pOutData[1], _ = mfrc522.Read(CRCResultRegM)
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"pIndata":  pIndata,
+		"pOutData": pOutData,
+	}).Info("calulateCRC")
+
+	return pOutData
 }
 
 // SelectTag : Tag
-func (mfrc522 *Mfrc522) SelectTag() {
+func (mfrc522 *Mfrc522) SelectTag(serNum [5]byte) int {
+	var buf = make([]byte, 0)
+
+	buf = append(buf, PICC_SElECTTAG)
+	buf = append(buf, 0x70)
+	for i := 0; i < len(serNum); i++ {
+		buf = append(buf, serNum[i])
+	}
+	var crc = mfrc522.calulateCRC(buf)
+	buf = append(buf, crc[0])
+	buf = append(buf, crc[1])
+
+	var status, backData, backLen = mfrc522.ToCard(PCD_TRANSCEIVE, buf)
+	if (status == MI_OK) && (backLen == 0x18) {
+		logger.NewLogger().WithFields(logrus.Fields{
+			"serNum":   serNum,
+			"backData": backData,
+		}).Info("SelectTag")
+		return int(backData[0])
+	}
+	return 0
 }
 
 // Auth : Auth
-func (mfrc522 *Mfrc522) Auth(authMode byte, blockAddr byte, sectorkey []byte, serNum [4]byte) int {
+func (mfrc522 *Mfrc522) Auth(authMode byte, blockAddr byte, sectorkey [6]byte, serNum [5]byte) int {
 	var buff = make([]byte, 0)
 	// First byte should be the authMode (A or B)
 	buff = append(buff, authMode)
@@ -497,7 +584,7 @@ func (mfrc522 *Mfrc522) Auth(authMode byte, blockAddr byte, sectorkey []byte, se
 }
 
 // DumpClassic1K : DumpClassic1K
-func (mfrc522 *Mfrc522) DumpClassic1K(key []byte, uid [4]byte) {
+func (mfrc522 *Mfrc522) DumpClassic1K(key [6]byte, uid [5]byte) {
 	logger.NewLogger().WithFields(logrus.Fields{
 		"key": key,
 		"uid": uid,
@@ -507,7 +594,13 @@ func (mfrc522 *Mfrc522) DumpClassic1K(key []byte, uid [4]byte) {
 		var status int = mfrc522.Auth(PICC_AUTHENT1A, byte(i), key, uid)
 		// Check if authenticated
 		if status == MI_OK {
-			mfrc522.Read(byte(i))
+			var blockAdr, dumpArray, err = mfrc522.ReadCard(byte(i))
+			if err != nil {
+				logger.NewLogger().WithFields(logrus.Fields{
+					"blockAdr":  blockAdr,
+					"dumpArray": dumpArray,
+				}).Info("DumpClassic1K")
+			}
 		} else {
 			// Error
 			logger.NewLogger().WithFields(logrus.Fields{
@@ -540,12 +633,11 @@ func (mfrc522 *Mfrc522) Init() {
 	logger.NewLogger().WithFields(logrus.Fields{}).Info("SetPinMode")
 	wiringpi.PinMode(22, 1)
 	wiringpi.DigitalWrite(22, 1)
-	wiringpi.DigitalWrite(22, 1)
 
 	mfrc522.Reset()
 	mfrc522.Write(TModeReg, 0x8D)
 	mfrc522.Write(TPrescalerReg, 0x3E)
-	mfrc522.Write(TReloadRegL, 30)
+	mfrc522.Write(TReloadRegL, 0x1E)
 	mfrc522.Write(TReloadRegH, 0x00)
 	mfrc522.Write(TxAutoReg, 0x40)
 	mfrc522.Write(ModeReg, 0x3D)

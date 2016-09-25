@@ -87,10 +87,22 @@ func HandlePostMfrc522DumpClassic1K(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, m)
 	}
 
+	m.Uid[0] = m.Data[0]
+	m.Uid[1] = m.Data[1]
+	m.Uid[2] = m.Data[2]
+	m.Uid[3] = m.Data[3]
+	m.Uid[4] = m.Data[4]
+
 	logger.NewLogger().WithFields(logrus.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
 	}).Info("mfrc522/dump/anticoll")
+
+	// Select tag
+	instance.SelectTag(m.Uid)
+
+	// DumpClassic1K
+	instance.DumpClassic1K(m.Key, m.Uid)
 
 	return c.JSON(http.StatusOK, m)
 }
