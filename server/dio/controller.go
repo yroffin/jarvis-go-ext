@@ -70,10 +70,13 @@ func HandlePostMfrc522DumpClassic1K(c echo.Context) error {
 		"uid": m.Uid,
 	}).Info("mfrc522/dump")
 
-	// request for status
 	var instance = mfrc522.GetInstance()
-	m.Status, m.Data = instance.Request(mfrc522.PICC_REQIDL)
-	m.Len = len(m.Data)
+
+	// stop any recent auth
+	instance.StopCrypto1()
+
+	// request for status
+	m.Status, _ = instance.Request(mfrc522.PICC_REQIDL)
 	if m.Status != 0 {
 		return c.JSON(http.StatusBadRequest, m)
 	}
@@ -99,12 +102,18 @@ func HandlePostMfrc522DumpClassic1K(c echo.Context) error {
 	}).Info("mfrc522/dump/anticoll")
 
 	// Select tag
-	instance.SelectTag(m.Uid)
+	m.Status, _ = instance.SelectTag(m.Uid)
+	if m.Status != 0 {
+		return c.JSON(http.StatusBadRequest, m)
+	}
 
 	// DumpClassic1K
-	instance.DumpClassic1K(m.Key, m.Uid)
+	var resource = instance.DumpClassic1K(m.Key, m.Uid)
 
-	return c.JSON(http.StatusOK, m)
+	// stop any recent auth
+	instance.StopCrypto1()
+
+	return c.JSON(http.StatusOK, resource)
 }
 
 // HandlePostMfrc522Request : handler for post
@@ -118,8 +127,7 @@ func HandlePostMfrc522Request(c echo.Context) error {
 	}).Info("mfrc522/request")
 
 	var instance = mfrc522.GetInstance()
-	m.Status, m.Data = instance.Request(mfrc522.PICC_REQIDL)
-	m.Len = len(m.Data)
+	m.Status, _ = instance.Request(mfrc522.PICC_REQIDL)
 
 	return c.JSON(http.StatusOK, m)
 }
