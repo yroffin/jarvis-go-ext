@@ -4,6 +4,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
 	ctrlDio "github.com/yroffin/jarvis-go-ext/server/dio"
+	ctrlMfrc522 "github.com/yroffin/jarvis-go-ext/server/mfrc522"
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
@@ -50,24 +51,20 @@ func Start() {
 		{ // routes for /api/dio
 			dio.Post("", ctrlDio.HandlePostDio)
 		}
-		spi := api.Group("/spi")
-		{ // routes for /api/spi
-			spi.Post("", ctrlDio.HandlePostSpi)
-		}
 		mfrc522 := api.Group("/mfrc522")
 		{ // routes for /api/mfrc522
-			mfrc522.Post("", ctrlDio.HandlePostMfrc522)
+			mfrc522.Post("", ctrlMfrc522.HandlePostMfrc522)
 			mfrc522Anticoll := mfrc522.Group("/anticoll")
 			{ // routes for /api/mfrc522/anticoll
-				mfrc522Anticoll.Post("", ctrlDio.HandlePostMfrc522AntiColl)
+				mfrc522Anticoll.Post("", ctrlMfrc522.HandlePostMfrc522AntiColl)
 			}
 			mfrc522Request := mfrc522.Group("/request")
 			{ // routes for /api/mfrc522/request
-				mfrc522Request.Post("", ctrlDio.HandlePostMfrc522Request)
+				mfrc522Request.Post("", ctrlMfrc522.HandlePostMfrc522Request)
 			}
 			mfrc522DumpClassic1K := mfrc522.Group("/dump")
 			{ // routes for /api/mfrc522/dump
-				mfrc522DumpClassic1K.Post("", ctrlDio.HandlePostMfrc522DumpClassic1K)
+				mfrc522DumpClassic1K.Post("", ctrlMfrc522.HandlePostMfrc522DumpClassic1K)
 			}
 		}
 	}

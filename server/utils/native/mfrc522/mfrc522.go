@@ -13,6 +13,7 @@ import (
 
 /**
  * Cf. https://github.com/pkourany/RC522_RFID/blob/master/RFID.cpp
+ * Cf. http://www.nxp.com/documents/data_sheet/MFRC522.pdf
  */
 
 const (
@@ -39,7 +40,9 @@ const (
 	PICC_RESTORE   = 0xC2
 	PICC_TRANSFER  = 0xB0
 	PICC_HALT      = 0x50
+)
 
+const (
 	MI_OK          = 0
 	MI_NOTAGERR    = 1
 	MI_ERR         = 2
@@ -215,7 +218,7 @@ func (mfrc522 *Mfrc522) AntennaOff() {
 // StopCrypto1 : set antenna off
 func (mfrc522 *Mfrc522) StopCrypto1() {
 	mfrc522.ClearBitMask(Status2Reg, 0x08)
-	logger.NewLogger().WithFields(logrus.Fields{}).Info("StopCrypto1")
+	logger.NewLogger().WithFields(logrus.Fields{}).Debug("StopCrypto1")
 }
 
 // appendByte : internal append function to array
@@ -260,7 +263,7 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte, expected int) (int
 		"command":  command,
 		"sendData": dataDump(sendData),
 		"expected": expected,
-	}).Info("ToCard::input")
+	}).Debug("ToCard::input")
 
 	if command == PCD_AUTHENT {
 		// Bit 4 IdleIEn : allows the idle interrupt request (IdleIRq bit) to be propagated to pin IRQ
@@ -338,14 +341,17 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte, expected int) (int
 			status = MI_OK
 
 			if (commIrqValue & irqEn & 0x01) != 0x00 {
+				// The ComIrqReg register’s ErrIRq bit indicates an error detected by the contactless UART
+				// during send or receive. This is indicated when any bit is set to logic 1 in register ErrorReg
 				status = MI_NOTAGERR
 				logger.NewLogger().WithFields(logrus.Fields{
 					"status": status,
-				}).Info("ToCard::MI_NOTAGERR")
+				}).Debug("ToCard::MI_NOTAGERR")
+				return MI_NOTAGERR, nil
 			} else {
 				logger.NewLogger().WithFields(logrus.Fields{
 					"status": status,
-				}).Info("ToCard::MI_OK")
+				}).Debug("ToCard::MI_OK")
 			}
 
 			if command == PCD_TRANSCEIVE {
@@ -369,7 +375,7 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte, expected int) (int
 						"fifoLevelValue": fmt.Sprintf("%08x", fifoLevelValue),
 						"lastBits":       fmt.Sprintf("%08x", lastBits),
 						"len(backData)":  fmt.Sprintf("%08x", len(backData)),
-					}).Info("ToCard::PCD_TRANSCEIVE")
+					}).Debug("ToCard::PCD_TRANSCEIVE")
 				}
 				// Verify timeout
 				if overflow > 16 {
@@ -397,49 +403,77 @@ func (mfrc522 *Mfrc522) ToCard(command byte, sendData []byte, expected int) (int
 	logger.NewLogger().WithFields(logrus.Fields{
 		"status":   status,
 		"backData": dataDump(backData),
-	}).Info("ToCard::result")
+	}).Debug("ToCard::result")
 
 	return status, backData
 }
 
 // ReadCard : read from card
-func (mfrc522 *Mfrc522) ReadCard(blockAddr byte, expected int) (byte, []byte, error) {
-	var recvData []byte = make([]byte, 0)
-	recvData = append(recvData, PICC_READ)
-	recvData = append(recvData, blockAddr)
-	var crc = mfrc522.calulateCRC(recvData)
-	recvData = append(recvData, crc[0])
-	recvData = append(recvData, crc[1])
-	var status, backData = mfrc522.ToCard(PCD_TRANSCEIVE, recvData, expected)
+func (mfrc522 *Mfrc522) ReadCard(blockAddr byte) (byte, []byte, error) {
+	var transceive []byte = make([]byte, 0)
+	transceive = append(transceive, PICC_READ)
+	transceive = append(transceive, blockAddr)
+	var crc = mfrc522.calulateCRC(transceive)
+	transceive = append(transceive, crc[0])
+	transceive = append(transceive, crc[1])
+	var status, backData = mfrc522.ToCard(PCD_TRANSCEIVE, transceive, 18)
 	if status != MI_OK {
-		return blockAddr, recvData, fmt.Errorf("Error while reading !")
+		return blockAddr, backData, fmt.Errorf("Error while reading !")
 	} else {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"blockAddr": blockAddr,
 			"backData":  dataDump(backData),
-		}).Info("ReadCard")
+		}).Debug("ReadCard")
 		return blockAddr, backData, nil
 	}
 }
 
 // WriteCard : write from card
-func (mfrc522 *Mfrc522) WriteCard() {
+func (mfrc522 *Mfrc522) WriteCard(blockAddr byte, writeData []byte) (byte, []byte, error) {
+	var transceive []byte = make([]byte, 0)
+	transceive = append(transceive, PICC_WRITE)
+	transceive = append(transceive, blockAddr)
+	var crc = mfrc522.calulateCRC(transceive)
+	transceive = append(transceive, crc[0])
+	transceive = append(transceive, crc[1])
+	var status, backData = mfrc522.ToCard(PCD_TRANSCEIVE, transceive, 4)
+	if status != MI_OK {
+		return blockAddr, transceive, fmt.Errorf("Error while writing !")
+	} else {
+		logger.NewLogger().WithFields(logrus.Fields{
+			"blockAddr": blockAddr,
+			"backData":  dataDump(backData),
+		}).Debug("WriteCard")
+		return blockAddr, backData, nil
+	}
+
+	// transceive ok
+	for index := 0; index < len(writeData); index++ {
+		transceive = append(transceive, writeData[index])
+	}
+	crc = mfrc522.calulateCRC(transceive)
+	transceive = append(transceive, crc[0])
+	transceive = append(transceive, crc[1])
+	status, backData = mfrc522.ToCard(PCD_TRANSCEIVE, transceive, 4)
+	if status != MI_OK {
+		return blockAddr, transceive, fmt.Errorf("Error while writing !")
+	} else {
+		logger.NewLogger().WithFields(logrus.Fields{
+			"blockAddr": blockAddr,
+			"backData":  dataDump(backData),
+		}).Debug("WriteCard data written")
+		return blockAddr, backData, nil
+	}
 }
 
 // Request : request
-// Output tagType
-// 0x4400 = Mifare_UltraLight
-// 0x0400 = Mifare_One(S50)
-// 0x0200 = Mifare_One(S70)
-// 0x0800 = Mifare_Pro(X)
-// 0x4403 = Mifare_DESFire
-func (mfrc522 *Mfrc522) Request(reqMode byte) (int, int) {
+func (mfrc522 *Mfrc522) Request(reqMode byte) (int, []byte) {
 	var tagType []byte = make([]byte, 1)
 	tagType[0] = reqMode
 
 	logger.NewLogger().WithFields(logrus.Fields{
 		"reqMode": fmt.Sprintf("%02x", reqMode),
-	}).Info("Request")
+	}).Debug("Request")
 
 	// TxLastBits[2:0]
 	// used for transmission of bit oriented frames: defines the number of bits of the last byte that will be transmitted
@@ -447,9 +481,11 @@ func (mfrc522 *Mfrc522) Request(reqMode byte) (int, int) {
 	var status, backData = mfrc522.ToCard(PCD_TRANSCEIVE, tagType, 2)
 
 	if status != MI_OK {
-		status = MI_ERR_REQUEST
-	} else {
-		status = MI_OK
+		logger.NewLogger().WithFields(logrus.Fields{
+			"status": status,
+		}).Error("Request")
+
+		return status, nil
 	}
 
 	logger.NewLogger().WithFields(logrus.Fields{
@@ -457,14 +493,14 @@ func (mfrc522 *Mfrc522) Request(reqMode byte) (int, int) {
 		"backData": dataDump(backData),
 	}).Info("Request")
 
-	return 0, status
+	return MI_OK, backData
 }
 
 // Anticoll : dump anticoll
-func (mfrc522 *Mfrc522) Anticoll() (int, []byte) {
+func (mfrc522 *Mfrc522) Anticoll() ([]byte, error) {
 	var serNum = make([]byte, 2)
 
-	logger.NewLogger().WithFields(logrus.Fields{}).Info("Anticoll")
+	logger.NewLogger().WithFields(logrus.Fields{}).Debug("Anticoll")
 
 	mfrc522.Write(BitFramingReg, 0x00)
 
@@ -482,19 +518,25 @@ func (mfrc522 *Mfrc522) Anticoll() (int, []byte) {
 				index++
 			}
 			if serNumCheck != backData[index] {
-				status = MI_ERR_CRC
+				logger.NewLogger().WithFields(logrus.Fields{
+					"error": "CRC Error",
+				}).Error("Anticoll")
+				return nil, fmt.Errorf("CRC Error")
 			}
 		} else {
-			status = MI_ERR_CRC_LEN
+			logger.NewLogger().WithFields(logrus.Fields{
+				"error":  "Invalid length",
+				"length": len(backData),
+			}).Error("Anticoll")
+			return nil, fmt.Errorf("Invalid length %d", len(backData))
 		}
 	}
 
 	logger.NewLogger().WithFields(logrus.Fields{
-		"status":   status,
 		"backData": dataDump(backData),
-	}).Info("Anticoll")
+	}).Debug("Anticoll")
 
-	return status, backData
+	return backData, nil
 }
 
 // CalulateCRC : compute CRC
@@ -528,7 +570,7 @@ func (mfrc522 *Mfrc522) calulateCRC(pIndata []byte) []byte {
 }
 
 // SelectTag : Tag
-func (mfrc522 *Mfrc522) SelectTag(serNum [5]byte) (int, int) {
+func (mfrc522 *Mfrc522) SelectTag(serNum []byte) (int, int) {
 	var buf = make([]byte, 0)
 
 	buf = append(buf, PICC_SELECTTAG)
@@ -543,13 +585,13 @@ func (mfrc522 *Mfrc522) SelectTag(serNum [5]byte) (int, int) {
 	logger.NewLogger().WithFields(logrus.Fields{
 		"serNum": serNum,
 		"buf":    dataDump(buf),
-	}).Info("SelectTag")
+	}).Debug("SelectTag")
 
 	var status, backData = mfrc522.ToCard(PCD_TRANSCEIVE, buf, 3)
 	if status == MI_OK {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"backData": dataDump(backData),
-		}).Info("SelectTag")
+		}).Debug("SelectTag")
 		return MI_OK, int(backData[0])
 	}
 	logger.NewLogger().WithFields(logrus.Fields{
@@ -574,13 +616,13 @@ func (mfrc522 *Mfrc522) SelectTag(serNum [5]byte) (int, int) {
 // • Card serial number byte 1
 // • Card serial number byte 2
 // • Card serial number byte 3
-func (mfrc522 *Mfrc522) Auth(authMode byte, blockAddr byte, sectorkey [6]byte, serNum [5]byte) int {
+func (mfrc522 *Mfrc522) Auth(authMode byte, blockAddr byte, sectorkey []byte, serNum []byte) int {
 	logger.NewLogger().WithFields(logrus.Fields{
 		"authMode":  authMode,
 		"blockAddr": blockAddr,
 		"sectorkey": sectorkey,
 		"serNum":    serNum,
-	}).Info("Auth")
+	}).Debug("Auth")
 
 	var buff = make([]byte, 0)
 	// First byte should be the authMode (A or B)
@@ -619,40 +661,103 @@ func (mfrc522 *Mfrc522) Auth(authMode byte, blockAddr byte, sectorkey [6]byte, s
 
 	logger.NewLogger().WithFields(logrus.Fields{
 		"status": MI_OK,
-	}).Info("Auth successful")
+	}).Debug("Auth successful")
 
 	return MI_OK
 }
 
 // DumpClassic1K : DumpClassic1K
-func (mfrc522 *Mfrc522) DumpClassic1K(key [6]byte, uid [5]byte) *types.Mfrc522Resource {
-	var resource *types.Mfrc522Resource = new(types.Mfrc522Resource)
+func (mfrc522 *Mfrc522) dumpClassic1K(key []byte, uid []byte) ([]types.Mfrc522Sector16, error) {
+	var Sectors []types.Mfrc522Sector16 = make([]types.Mfrc522Sector16, 64)
 
 	logger.NewLogger().WithFields(logrus.Fields{
 		"key": key,
 		"uid": uid,
-	}).Info("DumpClassic1K")
+	}).Debug("DumpClassic1K")
 
 	for i := 0; i < 64; i++ {
 		var status int = mfrc522.Auth(PICC_AUTHENT1A, byte(i), key, uid)
 		// Check if authenticated
 		if status == MI_OK {
-			var _, dumpArray, err = mfrc522.ReadCard(byte(i), 18)
+			var _, dumpArray, err = mfrc522.ReadCard(byte(i))
 			if err == nil {
 				for element := 0; element < 16; element++ {
-					resource.Sectors[i].Values[element] = dumpArray[element]
+					Sectors[i].Values[element] = dumpArray[element]
 				}
+			} else {
+				// Error
+				logger.NewLogger().WithFields(logrus.Fields{
+					"status": status,
+				}).Error("DumpClassic1K")
+				return Sectors, fmt.Errorf("Error while reading sector %d", i)
 			}
 		} else {
 			// Error
 			logger.NewLogger().WithFields(logrus.Fields{
 				"status": status,
 			}).Error("DumpClassic1K")
-			break
+			return Sectors, fmt.Errorf("Error while reading authentification")
 		}
 	}
 
-	return resource
+	return Sectors, nil
+}
+
+// WriteClassic1K : WriteClassic1K
+func (mfrc522 *Mfrc522) WriteClassic1K(key []byte, uid []byte, sector byte, data []byte) error {
+	logger.NewLogger().WithFields(logrus.Fields{
+		"key": key,
+		"uid": uid,
+	}).Debug("WriteClassic1K")
+
+	var status int = mfrc522.Auth(PICC_AUTHENT1A, sector, key, uid)
+	// Check if authenticated
+	if status == MI_OK {
+		var _, _, err = mfrc522.WriteCard(sector, data)
+		if err != nil {
+			// Error
+			logger.NewLogger().WithFields(logrus.Fields{
+				"status": status,
+			}).Error("WriteClassic1K")
+			return fmt.Errorf("Error while writing")
+		}
+	} else {
+		// Error
+		logger.NewLogger().WithFields(logrus.Fields{
+			"status": status,
+		}).Error("WriteClassic1K")
+		return fmt.Errorf("Error while reading authentification")
+	}
+
+	return nil
+}
+
+// RequestIdle : RequestIdle
+// Output tagType
+// 0x4400 = Mifare_UltraLight
+// 0x0400 = Mifare_One(S50)
+// 0x0200 = Mifare_One(S70)
+// 0x0800 = Mifare_Pro(X)
+// 0x4403 = Mifare_DESFire
+func (mfrc522 *Mfrc522) RequestIdle() (string, error) {
+	// request for status
+	for index := 0; index < 2; index++ {
+		var status, backData = mfrc522.Request(PICC_REQIDL)
+		logger.NewLogger().WithFields(logrus.Fields{
+			"status": status,
+		}).Debug("RequestIdle::result")
+		if status == MI_OK {
+			if backData[0] == 0x04 && backData[1] == 0x00 {
+				return "Mifare_One(S50)", nil
+			}
+			return "Other", nil
+		}
+		if status == MI_NOTAGERR {
+			continue
+		}
+		return "", fmt.Errorf("Error while requesting for no idle with error %d", status)
+	}
+	return "", fmt.Errorf("Error while requesting for no idle")
 }
 
 var instance *Mfrc522
@@ -665,6 +770,109 @@ func GetInstance() *Mfrc522 {
 		instance.Init()
 	})
 	return instance
+}
+
+// HandleRequestIdle : verify card/nfc tag presence
+func (mfrc522 *Mfrc522) handleRequestIdle() (error, string) {
+	// request for status
+	var tagType, status = mfrc522.RequestIdle()
+	if status != nil {
+		logger.NewLogger().WithFields(logrus.Fields{
+			"status": status,
+		}).Error("Unable to detect tag")
+		return fmt.Errorf("Unable to detect tag"), ""
+	}
+
+	return nil, tagType
+}
+
+// HandleAnticoll : read uuid
+func (mfrc522 *Mfrc522) handleAnticoll() (error, []byte) {
+	// request for uuid
+	var status error
+	var data []byte
+	data, status = mfrc522.Anticoll()
+	if status != nil {
+		logger.NewLogger().WithFields(logrus.Fields{
+			"status": status,
+		}).Error("Unable to detect uuid")
+		return fmt.Errorf("Unable to detect uuid"), nil
+	}
+
+	return nil, data
+}
+
+// handleSelectTag : read uuid
+func (mfrc522 *Mfrc522) handleSelectTag(Uid []byte) error {
+	var statusSelectTag, _ = mfrc522.SelectTag(Uid)
+	if statusSelectTag != 0 {
+		logger.NewLogger().WithFields(logrus.Fields{}).Error("Unable to select tag")
+		return fmt.Errorf("Unable to select tag")
+	}
+
+	return nil
+}
+
+// handleDumpClassic1K : rdump nfc tag
+func (mfrc522 *Mfrc522) handleDumpClassic1K(Key []byte, Uid []byte) (error, []types.Mfrc522Sector16) {
+	var status error
+	var Sectors []types.Mfrc522Sector16
+	Sectors, _ = mfrc522.dumpClassic1K(Key, Uid)
+	if status != nil {
+		// stop any recent auth
+		mfrc522.StopCrypto1()
+		logger.NewLogger().WithFields(logrus.Fields{
+			"error": status,
+		}).Error("Unable to read tag")
+		return fmt.Errorf("Unable to read tag"), nil
+	}
+
+	return nil, Sectors
+}
+
+// DumpClassic1K : handler for DumpClassic1K
+func (mfrc522 *Mfrc522) DumpClassic1K(Key []byte) (error, string, []byte, []types.Mfrc522Sector16) {
+	var result error
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"key": Key,
+	}).Info("DumpClassic1K")
+
+	// request for status
+	var tagType string
+	result, tagType = mfrc522.handleRequestIdle()
+	if result != nil {
+		return result, "", nil, nil
+	}
+
+	// request for uuid
+	var Uuid []byte
+	result, Uuid = mfrc522.handleAnticoll()
+	if result != nil {
+		return result, "", nil, nil
+	}
+
+	// select tag
+	result = mfrc522.handleSelectTag(Uuid)
+	if result != nil {
+		// stop any recent auth
+		mfrc522.StopCrypto1()
+		return result, "", nil, nil
+	}
+
+	// DumpClassic1K
+	var sectors []types.Mfrc522Sector16
+	result, sectors = mfrc522.handleDumpClassic1K(Key, Uuid)
+	if result != nil {
+		// stop any recent auth
+		mfrc522.StopCrypto1()
+		return result, "", nil, nil
+	}
+
+	// stop any recent auth
+	mfrc522.StopCrypto1()
+
+	return nil, tagType, Uuid, sectors
 }
 
 // Init : Init
@@ -688,5 +896,5 @@ func (mfrc522 *Mfrc522) Init() {
 	mfrc522.Write(ModeReg, 0x3D)
 	mfrc522.AntennaOn()
 
-	logger.NewLogger().WithFields(logrus.Fields{}).Info("Init")
+	logger.NewLogger().WithFields(logrus.Fields{}).Info("Init ok")
 }
