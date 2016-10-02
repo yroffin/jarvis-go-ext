@@ -30,18 +30,3 @@ func HandlePostDio(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, m)
 }
-
-// HandlePost : handler for post
-func HandlePostSpi(c echo.Context) error {
-	var m *types.DioResource
-	c.Bind(&m)
-
-	logger.NewLogger().WithFields(logrus.Fields{
-		"pin":         m.Pin,
-		"sender":      m.Sender,
-		"interruptor": m.Interuptor,
-		"on":          m.On,
-	}).Info("SPI")
-
-	return c.JSON(http.StatusOK, m)
-}

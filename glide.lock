@@ -1,6 +1,16 @@
-hash: 023003502457835f876b5c2c8e5ce8bd52148c962ea2cd9f730b37ad1e854b47
-updated: 2016-09-10T01:02:26.984802+02:00
+hash: 841f7ca88fc6227442dfc57a19339e968f1c31bc48b333f66e1857b321474528
+updated: 2016-09-18T19:34:15.095458754Z
 imports:
+- name: github.com/armon/consul-api
+  version: dcfedd50ed5334f96adee43fc88518a4f095e15c
+- name: github.com/coreos/go-etcd
+  version: 003851be7bb0694fe3cc457a49529a19388ee7cf
+  subpackages:
+  - etcd
+- name: github.com/cpuguy83/go-md2man
+  version: a65d4d2de4d5f7c74868dfa9b202a3c8be315aaa
+  subpackages:
+  - md2man
 - name: github.com/dgrijalva/jwt-go
   version: 24c63f56522a87ec5339cc3567883f1039378fdb
 - name: github.com/fsnotify/fsnotify
@@ -18,6 +28,14 @@ imports:
   - json/token
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/klauspost/compress
+  version: 08fe86a420401e830c24114bdf9f1ba91331407a
+  subpackages:
+  - flate
+  - gzip
+  - zlib
+- name: github.com/klauspost/crc32
+  version: 19b0b332c9e4516a6370a0456e6182c3b5036720
 - name: github.com/kr/fs
   version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/labstack/echo
@@ -74,8 +92,27 @@ imports:
   version: 6fd2ff4ff8dfcdf5556fbdc0ac0284408274b1a7
 - name: github.com/spf13/viper
   version: 16990631d4aa7e38f73dbbbf37fa13e67c648531
+- name: github.com/stretchr/testify
+  version: d77da356e56a7428ad25149ca77381849a6a5232
+- name: github.com/ugorji/go
+  version: 98ef79d6c615fa258e892ed0b11c6e013712693e
+  subpackages:
+  - codec
+- name: github.com/valyala/bytebufferpool
+  version: e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7
+- name: github.com/valyala/fasthttp
+  version: 95be7a58499b79d1a42a4e9880fb90645345c021
+  subpackages:
+  - engine/standard
+  - middleware
 - name: github.com/valyala/fasttemplate
   version: 3b874956e03f1636d171bda64b130f9135f42cff
+- name: github.com/valyala/tcplisten
+  version: 2e8869fbe85afac7f081a5cedc51797adcf5b6f1
+- name: github.com/xordataexchange/crypt
+  version: 749e360c8f236773f28fc6d3ddfce4a470795227
+  subpackages:
+  - config
 - name: golang.org/x/crypto
   version: 05d11b2ca14108dfc7f74f4f66b28c7fe92e1fd0
   subpackages:
@@ -97,6 +134,10 @@ imports:
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/airbrake/gobrake.v2
+  version: 5d77bd50d083834501349f8be70197b26963674d
+- name: gopkg.in/gemnasium/logrus-airbrake-hook.v2
+  version: 31e6fd4bd5a98d8ee7673d24bc54ec73c31810dd
 - name: gopkg.in/yaml.v2
   version: e4d366fc3c7938e2958e662b4258c7a89e1f0e3e
 testImports: []

@@ -144,10 +144,11 @@ func (spi *SPIDevice) Send(bytes_to_send []byte) ([]byte, error) {
 
 	// generates message
 	transfer := SpiIocTransfert{}
-	transfer.txBuf = uint64(uintptr(unsafe.Pointer(&wBuffer)))
-	transfer.rxBuf = uint64(uintptr(unsafe.Pointer(&rBuffer)))
-	transfer.length = uint32(unsafe.Sizeof(wBuffer))
+	transfer.txBuf = uint64(uintptr(unsafe.Pointer(&wBuffer[0])))
+	transfer.rxBuf = uint64(uintptr(unsafe.Pointer(&rBuffer[0])))
+	transfer.length = uint32(len(wBuffer))
 	transfer.delayUsecs = SPI_DELAY
+	transfer.csChange = 1
 	transfer.bitsPerWord = spi.bpw
 	transfer.speedHz = spi.speed
 
