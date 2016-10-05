@@ -40,7 +40,7 @@ func Start() {
 
 	if viper.GetString("jarvis.option.advertise") == "true" {
 		// init cron
-		cron.Init("@every 60s")
+		cron.InitAdvertise("@every 60s")
 		logger.NewLogger().WithFields(logrus.Fields{
 			"active": "true",
 		}).Info("cron")

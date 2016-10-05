@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 
 	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron"
@@ -14,8 +14,8 @@ import (
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 )
 
-// handler : handler for connector register
-func handler() {
+// handlerAdvertise : handlerAdvertise for connector register
+func handlerAdvertise() {
 
 	// define default value for this connector
 	m := &types.Connector{
@@ -35,32 +35,32 @@ func handler() {
 		Send(string(mJSON)).
 		End()
 	if errs != nil {
-		logger.NewLogger().WithFields(log.Fields{
+		logger.NewLogger().WithFields(logrus.Fields{
 			"errors": errs,
 		}).Info("CRON")
 		return
 	}
 
 	if b, err := ioutil.ReadAll(resp.Body); err == nil {
-		logger.NewLogger().WithFields(log.Fields{
+		logger.NewLogger().WithFields(logrus.Fields{
 			"body":   string(b),
 			"status": resp.Status,
 		}).Info("CRON")
 	} else {
-		logger.NewLogger().WithFields(log.Fields{
+		logger.NewLogger().WithFields(logrus.Fields{
 			"body":   string(b),
 			"status": resp.Status,
 		}).Info("WARN")
 	}
 }
 
-// Init : init cron service
-func Init(cr string) int {
+// InitAdvertise : init cron service
+func InitAdvertise(cr string) int {
 	// first call
-	handler()
+	handlerAdvertise()
 	// init cron
 	c := cron.New()
-	c.AddFunc(cr, handler)
+	c.AddFunc(cr, handlerAdvertise)
 	c.Start()
 	return 0
 }

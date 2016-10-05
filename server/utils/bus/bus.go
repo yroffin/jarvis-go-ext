@@ -1,8 +1,13 @@
 package bus
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"time"
+
+	"github.com/parnurzeal/gorequest"
+	"github.com/spf13/viper"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/yroffin/jarvis-go-ext/server/types"
@@ -35,6 +40,7 @@ func produce() {
 	}
 }
 
+// consume : consume message
 func consume() {
 	var last types.MessageResource
 
@@ -48,6 +54,36 @@ func consume() {
 			}).Info("consume")
 			last.TagType = msg.TagType
 			last.TagUuid = msg.TagUuid
+
+			if last.TagType != "None" {
+				mJSON, _ := json.Marshal(last)
+
+				request := gorequest.New().Timeout(2 * time.Second)
+				resp, _, errs := request.
+					Patch(viper.GetString("jarvis.server.url") + "/api/triggers/nfc:" + last.TagUuid).
+					Send(string(mJSON)).
+					End()
+
+				if errs != nil {
+					logger.NewLogger().WithFields(logrus.Fields{
+						"errors": errs,
+					}).Error("nfc")
+				} else {
+					if b, err := ioutil.ReadAll(resp.Body); err == nil {
+						logger.NewLogger().WithFields(logrus.Fields{
+							"url":    viper.GetString("jarvis.server.url") + "/api/triggers/nfc:" + last.TagUuid,
+							"body":   string(b),
+							"status": resp.Status,
+						}).Info("nfc")
+					} else {
+						logger.NewLogger().WithFields(logrus.Fields{
+							"url":    viper.GetString("jarvis.server.url") + "/api/triggers/nfc:" + last.TagUuid,
+							"body":   string(b),
+							"status": resp.Status,
+						}).Error("nfc")
+					}
+				}
+			}
 		}
 	}
 }

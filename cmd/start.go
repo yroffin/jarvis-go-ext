@@ -31,7 +31,7 @@ func init() {
 	startFlags.Int("jarvis.module.port", 7000, "set the listening jarvis module port")
 	startFlags.String("jarvis.module.interface", "0.0.0.0", "set the listening jarvis module interface")
 	startFlags.String("jarvis.module.name", "module", "set the listening jarvis module name")
-	startFlags.String("jarvis.server.url", "http://0.0.0.0:8082", "set the listening jarvis server url")
+	startFlags.String("jarvis.server.url", "http://192.168.1.12:8082", "set the listening jarvis server url")
 	startFlags.String("daemon", "false", "set daemon mode")
 	startFlags.String("jarvis.option.mfrc522", "false", "mfrc522 init on start")
 	startFlags.String("jarvis.option.wiringpi", "false", "wiringpi init on start")
