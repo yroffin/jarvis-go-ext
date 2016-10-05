@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	ctrlDio "github.com/yroffin/jarvis-go-ext/server/dio"
 	ctrlMfrc522 "github.com/yroffin/jarvis-go-ext/server/mfrc522"
+	bus "github.com/yroffin/jarvis-go-ext/server/utils/bus"
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
@@ -77,6 +78,14 @@ func Start() {
 		"interface": intf,
 		"port":      port,
 	}).Info("module")
+
+	if viper.GetString("jarvis.option.nfctag") == "true" {
+		// start nfc capture
+		bus.Start()
+		logger.NewLogger().WithFields(logrus.Fields{
+			"active": "true",
+		}).Info("nfctag")
+	}
 
 	e.Run(standard.New(intf + ":" + port))
 }

@@ -483,7 +483,7 @@ func (mfrc522 *Mfrc522) Request(reqMode byte) (int, []byte) {
 	if status != MI_OK {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"status": status,
-		}).Error("Request")
+		}).Debug("Request")
 
 		return status, nil
 	}
@@ -491,7 +491,7 @@ func (mfrc522 *Mfrc522) Request(reqMode byte) (int, []byte) {
 	logger.NewLogger().WithFields(logrus.Fields{
 		"status":   status,
 		"backData": dataDump(backData),
-	}).Info("Request")
+	}).Debug("Request")
 
 	return MI_OK, backData
 }
@@ -779,7 +779,7 @@ func (mfrc522 *Mfrc522) handleRequestIdle() (error, string) {
 	if status != nil {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"status": status,
-		}).Error("Unable to detect tag")
+		}).Debug("Unable to detect tag")
 		return fmt.Errorf("Unable to detect tag"), ""
 	}
 
@@ -828,6 +828,29 @@ func (mfrc522 *Mfrc522) handleDumpClassic1K(Key []byte, Uid []byte) (error, []ty
 	}
 
 	return nil, Sectors
+}
+
+// WaitForTag : handler for WaitForTag
+func (mfrc522 *Mfrc522) WaitForTag() (error, string, []byte) {
+	var result error
+
+	logger.NewLogger().WithFields(logrus.Fields{}).Debug("WaitForTag")
+
+	// request for status
+	var tagType string
+	result, tagType = mfrc522.handleRequestIdle()
+	if result != nil {
+		return result, "", nil
+	}
+
+	// request for uuid
+	var Uuid []byte
+	result, Uuid = mfrc522.handleAnticoll()
+	if result != nil {
+		return result, "", nil
+	}
+
+	return nil, tagType, Uuid
 }
 
 // DumpClassic1K : handler for DumpClassic1K

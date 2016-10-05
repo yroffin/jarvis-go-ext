@@ -37,6 +37,7 @@ func init() {
 	startFlags.String("jarvis.option.wiringpi", "false", "wiringpi init on start")
 	startFlags.String("jarvis.option.wiringpi.alt", "true", "alternate code")
 	startFlags.String("jarvis.option.advertise", "true", "advertise jarvis")
+	startFlags.String("jarvis.option.nfctag", "false", "advertise jarvis for nfc tag detection")
 
 	viper.BindPFlag("jarvis.module.port", startFlags.Lookup("jarvis.module.port"))
 	viper.BindPFlag("jarvis.module.name", startFlags.Lookup("jarvis.module.name"))
@@ -46,6 +47,7 @@ func init() {
 	viper.BindPFlag("jarvis.option.wiringpi", startFlags.Lookup("jarvis.option.wiringpi"))
 	viper.BindPFlag("jarvis.option.wiringpi.alt", startFlags.Lookup("jarvis.option.wiringpi.alt"))
 	viper.BindPFlag("jarvis.option.advertise", startFlags.Lookup("jarvis.option.advertise"))
+	viper.BindPFlag("jarvis.option.nfctag", startFlags.Lookup("jarvis.option.nfctag"))
 	viper.BindPFlag("daemon", startFlags.Lookup("daemon"))
 
 	RootCmd.AddCommand(startCmd)
