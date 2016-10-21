@@ -37,7 +37,7 @@ func handler() {
 	if errs != nil {
 		logger.NewLogger().WithFields(log.Fields{
 			"errors": errs,
-		}).Info("CRON")
+		}).Error("CRON")
 		return
 	}
 
@@ -45,12 +45,12 @@ func handler() {
 		logger.NewLogger().WithFields(log.Fields{
 			"body":   string(b),
 			"status": resp.Status,
-		}).Info("CRON")
+		}).Debug("CRON")
 	} else {
 		logger.NewLogger().WithFields(log.Fields{
 			"body":   string(b),
 			"status": resp.Status,
-		}).Info("WARN")
+		}).Warn("WARN")
 	}
 }
 
