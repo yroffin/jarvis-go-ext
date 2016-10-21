@@ -37,7 +37,7 @@ func handlerAdvertise() {
 	if errs != nil {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"errors": errs,
-		}).Info("CRON")
+		}).Error("CRON")
 		return
 	}
 
@@ -45,12 +45,12 @@ func handlerAdvertise() {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"body":   string(b),
 			"status": resp.Status,
-		}).Info("CRON")
+		}).Debug("CRON")
 	} else {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"body":   string(b),
 			"status": resp.Status,
-		}).Info("WARN")
+		}).Warn("WARN")
 	}
 }
 
