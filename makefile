@@ -15,7 +15,7 @@ clean:
 
 ${MODULE_ARMEL}:
 	# wiringPI
-	git clone git://git.drogon.net/wiringPi ${WHERE}/armel
+	git clone -b 2.32 git://git.drogon.net/wiringPi ${WHERE}/armel
 	cd ${WIRINGPI_ARMEL} && sed 's!gcc!arm-linux-gnueabi-gcc!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMEL} && sed 's!PIC!PIC -march=armv6j -mfloat-abi=soft!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMEL} && make all
