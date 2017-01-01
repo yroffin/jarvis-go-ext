@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	ctrlDio "github.com/yroffin/jarvis-go-ext/server/dio"
 	ctrlMfrc522 "github.com/yroffin/jarvis-go-ext/server/mfrc522"
+	ctrlTeleinfo "github.com/yroffin/jarvis-go-ext/server/teleinfo"
 	bus "github.com/yroffin/jarvis-go-ext/server/utils/bus"
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
@@ -51,6 +52,10 @@ func Start() {
 		dio := api.Group("/dio")
 		{ // routes for /api/dio
 			dio.Post("", ctrlDio.HandlePostDio)
+		}
+		teleinfo := api.Group("/teleinfo")
+		{ // routes for /api/dio
+			teleinfo.Get("", ctrlTeleinfo.HandleGetTeleinfo)
 		}
 		mfrc522 := api.Group("/mfrc522")
 		{ // routes for /api/mfrc522
