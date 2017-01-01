@@ -19,6 +19,7 @@ ${MODULE_ARMEL}:
 	cd ${WIRINGPI_ARMEL} && sed 's!gcc!arm-linux-gnueabi-gcc!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMEL} && sed 's!PIC!PIC -march=armv6j -mfloat-abi=soft!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMEL} && make all
+	sudo ls -lrt ${WIRINGPI_ARMEL}
 	sudo mv -f ${WIRINGPI_ARMEL}/libwiringPi.so.2.32 /usr/lib/libwiringPi.so
 	readelf -A /usr/lib/libwiringPi.so
 	# module
@@ -31,6 +32,7 @@ ${MODULE_ARMHF}:
 	cd ${WIRINGPI_ARMHF} && sed 's!gcc!arm-linux-gnueabihf-gcc!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMHF} && sed 's!PIC!PIC -march=armv7 -mfloat-abi=hard!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMHF} && make all
+	sudo ls -lrt ${WIRINGPI_ARMHF}
 	sudo mv -f ${WIRINGPI_ARMHF}/libwiringPi.so.2.32 /usr/lib/libwiringPi.so
 	readelf -A /usr/lib/libwiringPi.so
 	# module
