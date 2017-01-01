@@ -10,8 +10,8 @@ all: clean ${MODULE_ARMEL} ${MODULE_ARMHF}
 clean:
 	rm -rf ${WHERE}/armel
 	rm -rf ${WHERE}/armhf
-	rm -f ${MODULE_ARMEL}
 	rm -f ${MODULE_ARMHF}
+	rm -f ${MODULE_ARMEL}
 
 ${MODULE_ARMEL}:
 	# wiringPI
