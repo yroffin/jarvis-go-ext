@@ -20,7 +20,7 @@ ${MODULE_ARMEL}:
 	cd ${WIRINGPI_ARMEL} && sed 's!PIC!PIC -march=armv6j -mfloat-abi=soft!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMEL} && make all
 	sudo ls -lrt ${WIRINGPI_ARMEL}
-	sudo mv -f ${WIRINGPI_ARMEL}/libwiringPi.so.2.32 /usr/lib/libwiringPi.so
+	sudo mv -f ${WIRINGPI_ARMEL}/libwiringPi.so.2.?? /usr/lib/libwiringPi.so
 	readelf -A /usr/lib/libwiringPi.so
 	# module
 	CC=arm-linux-gnueabi-gcc GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=1 CGO_CFLAGS="-march=armv6j -mfloat-abi=soft" CGO_LDFLAGS="-lwiringPi" go install -installsuffix armel ./...
@@ -33,7 +33,7 @@ ${MODULE_ARMHF}:
 	cd ${WIRINGPI_ARMHF} && sed 's!PIC!PIC -march=armv7 -mfloat-abi=hard!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMHF} && make all
 	sudo ls -lrt ${WIRINGPI_ARMHF}
-	sudo mv -f ${WIRINGPI_ARMHF}/libwiringPi.so.2.32 /usr/lib/libwiringPi.so
+	sudo mv -f ${WIRINGPI_ARMHF}/libwiringPi.so.2.?? /usr/lib/libwiringPi.so
 	readelf -A /usr/lib/libwiringPi.so
 	# module
 	CC=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 CGO_CFLAGS="" CGO_LDFLAGS="-lwiringPi" go install -installsuffix armhf ./...
