@@ -28,7 +28,7 @@ ${MODULE_ARMEL}:
 
 ${MODULE_ARMHF}:
 	# wiringPI
-	git clone git://git.drogon.net/wiringPi ${WHERE}/armhf
+	git clone -b 2.32 git://git.drogon.net/wiringPi ${WHERE}/armhf
 	cd ${WIRINGPI_ARMHF} && sed 's!gcc!arm-linux-gnueabihf-gcc!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMHF} && sed 's!PIC!PIC -march=armv7 -mfloat-abi=hard!g' Makefile > Makefile.tmp && mv -f Makefile.tmp Makefile
 	cd ${WIRINGPI_ARMHF} && make all
