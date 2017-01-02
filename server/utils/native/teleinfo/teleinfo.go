@@ -48,7 +48,13 @@ func handleReadFile(device string) error {
 		"device": device,
 	}).Info("handleReadFile")
 
-	s, _ := os.OpenFile(device, syscall.O_RDWR|syscall.O_NOCTTY|syscall.O_NONBLOCK, 0666)
+	s, err := os.OpenFile(device, syscall.O_RDONLY|syscall.O_NOCTTY, 0666)
+
+	if err != nil {
+		logger.NewLogger().WithFields(logrus.Fields{
+			"error": err,
+		}).Error("handleReadFile")
+	}
 
 	// Receive reply
 	for {
