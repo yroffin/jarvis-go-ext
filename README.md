@@ -3,6 +3,12 @@ Jarvis golang extention [![Build Status](https://travis-ci.org/yroffin/jarvis-go
 
 # Dependencies and setup
 
+## MongoDB
+
+Setup mongodb for store local data
+
+        sudo apt-get install mongodb-server
+
 ## WiringPI
 
 Tools is base on wiringPi so setup wiringPi on your host
