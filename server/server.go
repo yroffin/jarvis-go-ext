@@ -10,6 +10,7 @@ import (
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
 	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
+	"github.com/yroffin/jarvis-go-ext/server/utils/native/teleinfo"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 
 	"github.com/labstack/echo"
@@ -45,6 +46,14 @@ func Start() {
 		logger.NewLogger().WithFields(logrus.Fields{
 			"active": "true",
 		}).Info("cron")
+	}
+
+	if viper.GetString("jarvis.option.teleinfo") == "true" {
+		// init teleinfo singleton
+		teleinfo.GetInstance()
+		logger.NewLogger().WithFields(logrus.Fields{
+			"active": "true",
+		}).Info("teleinfo")
 	}
 
 	api := e.Group("/api")
