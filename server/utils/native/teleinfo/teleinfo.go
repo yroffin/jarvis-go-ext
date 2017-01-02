@@ -43,6 +43,11 @@ var canal = make(chan byte, 5)
 
 // handleReadFile : read file
 func handleReadFile(device string) error {
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"device": device,
+	}).Info("handleReadFile")
+
 	s, _ := os.OpenFile(device, syscall.O_RDWR|syscall.O_NOCTTY|syscall.O_NONBLOCK, 0666)
 
 	// Receive reply
@@ -56,6 +61,11 @@ func handleReadFile(device string) error {
 			canal <- buf[i]
 		}
 	}
+
+	logger.NewLogger().WithFields(logrus.Fields{
+		"status": "done",
+	}).Info("handleReadFile")
+
 	return nil
 }
 
