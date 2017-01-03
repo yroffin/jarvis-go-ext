@@ -1,3 +1,19 @@
+/**
+ * Copyright 2017 Yannick Roffin
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
 package teleinfo
 
 import (
@@ -6,7 +22,6 @@ import (
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 )
 
 // On linux
@@ -16,7 +31,7 @@ import (
 
 // Teleinfo : instance Teleinfo device struct
 type Teleinfo struct {
-	entries map[string]string
+	Entries map[string]string
 }
 
 // Trame EDF
@@ -28,6 +43,7 @@ type TeleinfoTrame struct {
 
 var instance *Teleinfo
 var once sync.Once
+var mutex = &sync.Mutex{}
 
 // GetInstance : singleton instance
 func GetInstance() *Teleinfo {
@@ -44,14 +60,14 @@ var canal = make(chan byte, 5)
 // handleReadFile : read file
 func handleReadFile(device string) error {
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"device": device,
 	}).Info("handleReadFile")
 
 	s, err := os.OpenFile(device, syscall.O_RDONLY|syscall.O_NOCTTY, 0666)
 
 	if err != nil {
-		logger.NewLogger().WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"error": err,
 		}).Error("handleReadFile")
 	}
@@ -68,7 +84,7 @@ func handleReadFile(device string) error {
 		}
 	}
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"status": "done",
 	}).Info("handleReadFile")
 
@@ -87,7 +103,9 @@ func handleReadFile(device string) error {
 
 // submit trame
 func submit(teleinfo *Teleinfo, trame TeleinfoTrame) {
-	teleinfo.entries[trame.etiquette] = trame.data
+	mutex.Lock()
+	teleinfo.Entries[trame.etiquette] = trame.data
+	mutex.Unlock()
 }
 
 // single trame
@@ -163,23 +181,38 @@ func worker(teleinfo *Teleinfo) {
 	}
 }
 
-var mapMutex sync.Once
-
 // get values
 func (teleinfo *Teleinfo) GetEntries(entries map[string]string) map[string]string {
-	for key, value := range teleinfo.entries {
+	mutex.Lock()
+	for key, value := range teleinfo.Entries {
 		entries[key] = value
 	}
+	mutex.Unlock()
 	return entries
 }
 
-// Init : Init
+// get values
+func (teleinfo *Teleinfo) Get(key string) string {
+	var value string
+	mutex.Lock()
+	i, ex := teleinfo.Entries[key]
+	if ex {
+		value = i
+	}
+	mutex.Unlock()
+	return value
+}
+
+// initialize this module
 func (teleinfo *Teleinfo) init() {
 	// add map
-	teleinfo.entries = make(map[string]string)
+	teleinfo.Entries = make(map[string]string)
 
 	// start worker
 	go handleReadFile(getTeleinfoFile())
 	go worker(teleinfo)
-	logger.NewLogger().WithFields(logrus.Fields{}).Info("Init ok")
+
+	logrus.WithFields(logrus.Fields{
+		"teleinfoFile": getTeleinfoFile(),
+	}).Info("Teleinfo")
 }

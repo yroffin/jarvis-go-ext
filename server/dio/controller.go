@@ -6,7 +6,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/yroffin/jarvis-go-ext/server/types"
-	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
 
@@ -15,7 +14,7 @@ func HandlePostDio(c echo.Context) error {
 	var m *types.DioResource
 	c.Bind(&m)
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"pin":         m.Pin,
 		"sender":      m.Sender,
 		"interruptor": m.Interuptor,

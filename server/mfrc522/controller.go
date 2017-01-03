@@ -6,7 +6,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/yroffin/jarvis-go-ext/server/types"
-	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
 )
 
@@ -15,7 +14,7 @@ func HandlePostMfrc522(c echo.Context) error {
 	var m *types.Mfrc522Resource
 	c.Bind(&m)
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
 	}).Info("mfrc522")
@@ -28,7 +27,7 @@ func HandlePostMfrc522DumpClassic1K(c echo.Context) error {
 	var m *types.Mfrc522DumpResource
 	c.Bind(&m)
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
 	}).Info("mfrc522/dump")
@@ -38,7 +37,7 @@ func HandlePostMfrc522DumpClassic1K(c echo.Context) error {
 	// dump nfc tag
 	var result, tagType, data, _ = instance.DumpClassic1K(m.Key[0:len(m.Key)])
 	if result != nil {
-		logger.NewLogger().WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"status": result,
 		}).Error("Unable to detect tag")
 	}
@@ -63,7 +62,7 @@ func HandlePostMfrc522WriteClassic1K(c echo.Context) error {
 	var m *types.Mfrc522WriteResource
 	c.Bind(&m)
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
 	}).Info("mfrc522/dump")
@@ -76,7 +75,7 @@ func HandlePostMfrc522Request(c echo.Context) error {
 	var m *types.Mfrc522DumpResource
 	c.Bind(&m)
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"key": m.Key,
 	}).Info("HandlePostMfrc522Request")
 
@@ -88,7 +87,7 @@ func HandlePostMfrc522AntiColl(c echo.Context) error {
 	var m *types.Mfrc522Resource
 	c.Bind(&m)
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
 	}).Info("HandlePostMfrc522AntiColl")

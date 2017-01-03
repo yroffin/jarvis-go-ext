@@ -11,7 +11,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/yroffin/jarvis-go-ext/server/types"
-	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
 )
 
@@ -25,7 +24,7 @@ func produce() {
 		// dump nfc tag
 		var result, tagType, uuid = instance.WaitForTag()
 		if result != nil {
-			logger.NewLogger().WithFields(logrus.Fields{
+			logrus.WithFields(logrus.Fields{
 				"status": result,
 			}).Warn("Unable to detect tag")
 			msg.TagType = "None"
@@ -49,7 +48,7 @@ func consume() {
 
 		if msg.TagUuid != last.TagUuid {
 			// New Tag detection
-			logger.NewLogger().WithFields(logrus.Fields{
+			logrus.WithFields(logrus.Fields{
 				"message": msg,
 			}).Info("consume")
 			last.TagType = msg.TagType
@@ -65,18 +64,18 @@ func consume() {
 					End()
 
 				if errs != nil {
-					logger.NewLogger().WithFields(logrus.Fields{
+					logrus.WithFields(logrus.Fields{
 						"errors": errs,
 					}).Error("nfc")
 				} else {
 					if b, err := ioutil.ReadAll(resp.Body); err == nil {
-						logger.NewLogger().WithFields(logrus.Fields{
+						logrus.WithFields(logrus.Fields{
 							"url":    viper.GetString("jarvis.server.url") + "/api/triggers/nfc:" + last.TagUuid,
 							"body":   string(b),
 							"status": resp.Status,
 						}).Info("nfc")
 					} else {
-						logger.NewLogger().WithFields(logrus.Fields{
+						logrus.WithFields(logrus.Fields{
 							"url":    viper.GetString("jarvis.server.url") + "/api/triggers/nfc:" + last.TagUuid,
 							"body":   string(b),
 							"status": resp.Status,

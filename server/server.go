@@ -8,7 +8,7 @@ import (
 	ctrlTeleinfo "github.com/yroffin/jarvis-go-ext/server/teleinfo"
 	bus "github.com/yroffin/jarvis-go-ext/server/utils/bus"
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
-	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
+	"github.com/yroffin/jarvis-go-ext/server/utils/mongodb"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/teleinfo"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
@@ -24,37 +24,47 @@ func Start() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	// setup wiring pi
 	if viper.GetString("jarvis.option.wiringpi") == "true" {
 		// init wiringPi library
-		wiringpi.Init()
-		logger.NewLogger().WithFields(logrus.Fields{
+		wiringpi.GetInstance()
+		logrus.WithFields(logrus.Fields{
 			"active": "true",
 		}).Info("wiringpi")
 	}
 
+	// setup mongodb
+	if viper.GetString("jarvis.option.mongodb") != "" {
+		// init MongoDb driver
+		mongodb.GetInstance()
+		logrus.WithFields(logrus.Fields{
+			"active": "true",
+		}).Info("mongodb")
+	}
+
+	// setup mfrc522
 	if viper.GetString("jarvis.option.mfrc522") == "true" {
 		// init mfrc522 singleton
 		mfrc522.GetInstance()
-		logger.NewLogger().WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"active": "true",
 		}).Info("mfrc522")
 	}
 
-	if viper.GetString("jarvis.option.advertise") == "true" {
-		// init cron
-		cron.InitAdvertise("@every 60s")
-		logger.NewLogger().WithFields(logrus.Fields{
-			"active": "true",
-		}).Info("cron")
-	}
-
+	// setup teleinfo
 	if viper.GetString("jarvis.option.teleinfo") == "true" {
 		// init teleinfo singleton
 		teleinfo.GetInstance()
-		logger.NewLogger().WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"active": "true",
 		}).Info("teleinfo")
 	}
+
+	// setup cron manager
+	cron.GetInstance()
+	logrus.WithFields(logrus.Fields{
+		"active": "true",
+	}).Info("cron")
 
 	api := e.Group("/api")
 	{ // routes for /api
@@ -88,7 +98,7 @@ func Start() {
 	intf := viper.GetString("jarvis.module.interface")
 	port := viper.GetString("jarvis.module.port")
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"interface": intf,
 		"port":      port,
 	}).Info("module")
@@ -96,7 +106,7 @@ func Start() {
 	if viper.GetString("jarvis.option.nfctag") == "true" {
 		// start nfc capture
 		bus.Start()
-		logger.NewLogger().WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"active": "true",
 		}).Info("nfctag")
 	}

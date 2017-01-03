@@ -1,5 +1,5 @@
 hash: 841f7ca88fc6227442dfc57a19339e968f1c31bc48b333f66e1857b321474528
-updated: 2016-09-18T19:34:15.095458754Z
+updated: 2017-01-02T23:11:25.8202105+01:00
 imports:
 - name: github.com/armon/consul-api
   version: dcfedd50ed5334f96adee43fc88518a4f095e15c
@@ -138,6 +138,13 @@ imports:
   version: 5d77bd50d083834501349f8be70197b26963674d
 - name: gopkg.in/gemnasium/logrus-airbrake-hook.v2
   version: 31e6fd4bd5a98d8ee7673d24bc54ec73c31810dd
+- name: gopkg.in/mgo.v2
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
+  subpackages:
+  - bson
+  - internal/json
+  - internal/sasl
+  - internal/scram
 - name: gopkg.in/yaml.v2
   version: e4d366fc3c7938e2958e662b4258c7a89e1f0e3e
 testImports: []

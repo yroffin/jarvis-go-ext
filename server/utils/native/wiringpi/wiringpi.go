@@ -11,10 +11,35 @@ package wiringpi
 // extern void pinMode             (int pin, int mode);
 // extern int  setuid      		(int uid);
 import "C"
+import (
+	"sync"
+
+	"github.com/Sirupsen/logrus"
+)
+
+// WiringPiDriver : wiring pi instance
+type WiringPiDriver struct {
+}
+
+var instance *WiringPiDriver
+var once sync.Once
+
+// GetInstance : singleton instance
+func GetInstance() *WiringPiDriver {
+	once.Do(func() {
+		instance = new(WiringPiDriver)
+		instance.init()
+	})
+	return instance
+}
 
 // WiringPiInit : initialize the library
-func Init() int {
-	return int(C.wiringPiSetupInit())
+func (wiringPi *WiringPiDriver) init() int {
+	var res = int(C.wiringPiSetupInit())
+	logrus.WithFields(logrus.Fields{
+		"Init": "on",
+	}).Info("WiringPiDriver")
+	return res
 }
 
 // PinMode : call wiringpi pinMode
