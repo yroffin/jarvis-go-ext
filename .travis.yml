@@ -42,6 +42,7 @@ deploy:
   - "${GOPATH}/jarvis-rest-module-0.0.1-SNAPSHOT.armel"
   - "${GOPATH}/jarvis-rest-module-0.0.1-SNAPSHOT.armhf"
   - "${TRAVIS_BUILD_DIR}/module.properties"
+  - "${TRAVIS_BUILD_DIR}/script/jarvis-go-service"
   skip_cleanup: true
   on:
     tags: true

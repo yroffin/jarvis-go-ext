@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <sched.h>
 
-extern int setuid(int value);
 extern int wiringPiSetup();
 
 int wiringPiSetupInit() {
