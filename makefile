@@ -23,7 +23,7 @@ ${MODULE_ARMEL}:
 	sudo mv -f ${WIRINGPI_ARMEL}/libwiringPi.so.2.?? /usr/lib/libwiringPi.so
 	readelf -A /usr/lib/libwiringPi.so
 	# module
-	CC=arm-linux-gnueabi-gcc GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=1 CGO_CFLAGS="-march=armv6j -mfloat-abi=soft" CGO_LDFLAGS="-lwiringPi" go install -installsuffix armel ./...
+	CC=arm-linux-gnueabi-gcc GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=1 CGO_CFLAGS="-march=armv6j -mfloat-abi=soft" CGO_LDFLAGS="-lwiringPi" go install -installsuffix armel
 	mv -f ${GOPATH}/bin/linux_arm/jarvis-go-ext ${GOPATH}/jarvis-rest-module-0.0.1-SNAPSHOT.armel
 
 ${MODULE_ARMHF}:
@@ -36,6 +36,6 @@ ${MODULE_ARMHF}:
 	sudo mv -f ${WIRINGPI_ARMHF}/libwiringPi.so.2.?? /usr/lib/libwiringPi.so
 	readelf -A /usr/lib/libwiringPi.so
 	# module
-	CC=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 CGO_CFLAGS="" CGO_LDFLAGS="-lwiringPi" go install -installsuffix armhf ./...
+	CC=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 CGO_CFLAGS="" CGO_LDFLAGS="-lwiringPi" go install -installsuffix armhf
 	mv -f ${GOPATH}/bin/linux_arm/jarvis-go-ext ${GOPATH}/jarvis-rest-module-0.0.1-SNAPSHOT.armhf
 
