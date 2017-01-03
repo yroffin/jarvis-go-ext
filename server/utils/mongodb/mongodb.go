@@ -72,6 +72,10 @@ func (mongoDriver *MongoDriver) Close() {
 func (mongoDriver *MongoDriver) init() {
 	var host = viper.GetString("jarvis.option.mongodb")
 
+	logrus.WithFields(logrus.Fields{
+		"host": host,
+	}).Info("MongoDriver")
+
 	// get mongo session
 	session, err := mgo.Dial(host)
 	if err != nil {

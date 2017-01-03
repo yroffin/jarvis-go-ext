@@ -3,23 +3,23 @@ package dio
 import (
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
+	log "github.com/yroffin/jarvis-go-ext/logger"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
 
-// HandlePost : handler for post
+// HandlePostDio handle post on dio resource
 func HandlePostDio(c echo.Context) error {
 	var m *types.DioResource
 	c.Bind(&m)
 
-	logrus.WithFields(logrus.Fields{
+	log.Default.Info("dio", log.Fields{
 		"pin":         m.Pin,
 		"sender":      m.Sender,
 		"interruptor": m.Interuptor,
 		"on":          m.On,
-	}).Info("DIO")
+	})
 
 	if m.On == true {
 		wiringpi.On(m.Pin, m.Sender, m.Interuptor)

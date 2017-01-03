@@ -22,6 +22,7 @@ import (
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
+	log "github.com/yroffin/jarvis-go-ext/logger"
 )
 
 // On linux
@@ -204,15 +205,16 @@ func (teleinfo *Teleinfo) Get(key string) string {
 }
 
 // initialize this module
-func (teleinfo *Teleinfo) init() {
+func (that *Teleinfo) init() {
 	// add map
-	teleinfo.Entries = make(map[string]string)
+	that.Entries = make(map[string]string)
 
 	// start worker
 	go handleReadFile(getTeleinfoFile())
-	go worker(teleinfo)
+	go worker(that)
 
-	logrus.WithFields(logrus.Fields{
+	// log information
+	log.Default.Info("teleinfo", log.Fields{
 		"teleinfoFile": getTeleinfoFile(),
-	}).Info("Teleinfo")
+	})
 }

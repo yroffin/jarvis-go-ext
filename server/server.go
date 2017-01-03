@@ -16,22 +16,13 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
 	"github.com/labstack/echo/middleware"
+	log "github.com/yroffin/jarvis-go-ext/logger"
 )
 
 // Start : start the jarvis server
 func Start() {
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-
-	// setup wiring pi
-	if viper.GetString("jarvis.option.wiringpi") == "true" {
-		// init wiringPi library
-		wiringpi.GetInstance()
-		logrus.WithFields(logrus.Fields{
-			"active": "true",
-		}).Info("wiringpi")
-	}
 
 	// setup mongodb
 	if viper.GetString("jarvis.option.mongodb") != "" {
@@ -42,29 +33,42 @@ func Start() {
 		}).Info("mongodb")
 	}
 
+	// init mongodb logs
+	e.Use(log.GetInstance().GetMiddleware())
+
+	// setup wiring pi
+	if viper.GetString("jarvis.option.wiringpi") == "true" {
+		// init wiringPi library
+		wiringpi.GetInstance()
+		log.Default.Info("wiringpi", log.Fields{
+			"active": "true",
+		})
+	}
+
 	// setup mfrc522
 	if viper.GetString("jarvis.option.mfrc522") == "true" {
 		// init mfrc522 singleton
 		mfrc522.GetInstance()
-		logrus.WithFields(logrus.Fields{
+		log.Default.Info("mfrc522", log.Fields{
 			"active": "true",
-		}).Info("mfrc522")
+		})
 	}
 
 	// setup teleinfo
 	if viper.GetString("jarvis.option.teleinfo") == "true" {
 		// init teleinfo singleton
 		teleinfo.GetInstance()
-		logrus.WithFields(logrus.Fields{
+		log.Default.Info("teleinfo", log.Fields{
 			"active": "true",
-		}).Info("teleinfo")
+		})
 	}
 
 	// setup cron manager
 	cron.GetInstance()
-	logrus.WithFields(logrus.Fields{
+
+	log.Default.Info("cron", log.Fields{
 		"active": "true",
-	}).Info("cron")
+	})
 
 	api := e.Group("/api")
 	{ // routes for /api
@@ -106,9 +110,9 @@ func Start() {
 	if viper.GetString("jarvis.option.nfctag") == "true" {
 		// start nfc capture
 		bus.Start()
-		logrus.WithFields(logrus.Fields{
+		log.Default.Info("nfctag", log.Fields{
 			"active": "true",
-		}).Info("nfctag")
+		})
 	}
 
 	e.Run(standard.New(intf + ":" + port))
