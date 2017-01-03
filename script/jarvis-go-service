@@ -1,7 +1,7 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          jarvis
-# Required-Start:    $network $remote_fs $syslog networking ntp ntpd
+# Required-Start:    $network $remote_fs $syslog networking ntpd
 # X-Start-After:     $network
 # Required-Stop:     $network $remote_fs $syslog
 # Default-Start:     2 3 4 5
@@ -24,9 +24,14 @@ GROUP=jarvis
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
-EXECUTABLE_COMMAND=/home/pi/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
-EXECUTABLE_ARGS="start --jarvis.module.interface 0.0.0.0 --jarvis.module.port 7000 --jarvis.server.url http://192.168.1.111:8082 --jarvis.option.wiringpi false --jarvis.option.mfrc522 false"
+ARG_REMOTE=http://192.168.1.111:8082
+ARG_WIRINGPI=false
+ARG_MFRC522=false
+ARG_WIRINGPI=false
+ARG_TELEINFO=false
 
+EXECUTABLE_COMMAND=/home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
+EXECUTABLE_ARGS="`echo start --jarvis.module.interface 0.0.0.0 --jarvis.module.port 7000 --jarvis.server.url ${ARG_REMOTE} --jarvis.option.wiringpi ${ARG_WIRINGPI} --jarvis.option.mfrc522 ${ARG_MFRC522} --jarvis.option.teleinfo ${ARG_TELEINFO}`"
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh

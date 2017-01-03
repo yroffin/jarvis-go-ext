@@ -21,15 +21,14 @@ For teleinfo option change right to 755 on USB file (ex: /dev/ttyUSB0) and apply
     
 ## Setup on raspberry pi 2 or zero
 
-    pi@raspberrypi:~ $ mkdir jarvis
-    pi@raspberrypi:~ $ cd jarvis
-    pi@raspberrypi:~ $ export GITHUB=https://github.com/yroffin/jarvis-go-ext/releases/download/1.01b
-    pi@raspberrypi:~/jarvis $ wget ${GITHUB}/jarvis-rest-module-0.0.1-SNAPSHOT.armel
-    pi@raspberrypi:~/jarvis $ ls -lrt
-    total 11784
-    -rw-r--r-- 1 pi pi 12063744 Jan  2 10:07 jarvis-rest-module-0.0.1-SNAPSHOT.armel
-    pi@raspberrypi:~/jarvis $ chmod 755 jarvis-rest-module-0.0.1-SNAPSHOT.armel
-    pi@raspberrypi:~/jarvis $ ./jarvis-rest-module-0.0.1-SNAPSHOT.armel
-    pi@raspberrypi:~/jarvis $ ./jarvis-rest-module-0.0.1-SNAPSHOT.armel start --jarvis.option.teleinfo true
-    pi@raspberrypi:~/jarvis $ curl http://192.168.1.47:7000/api/teleinfo
+    pi@raspberrypi:~ $ sudo useradd -m -b /home/jarvis jarvis
+    pi@raspberrypi:~ $ export GITHUB=https://github.com/yroffin/jarvis-go-ext/releases/download/1.01b6
+    pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-rest-module-0.0.1-SNAPSHOT.armel -O /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
+    pi@raspberrypi:~ $ sudo chmod 755 /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
+    pi@raspberrypi:~ $ sudo chown jarvis:jarvis /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
+    pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-go-service -O /etc/inid./jarvis-go-service
+    pi@raspberrypi:~ $ sudo chmod 755 /etc/init.d/jarvis-go-service
+    pi@raspberrypi:~ $ sudo update-rc.d jarvis-go-service defaults
+    pi@raspberrypi:~ $ sudo service jarvis-go-service restart
+    pi@raspberrypi:~ $ curl http://192.168.1.47:7000/api/teleinfo
 
