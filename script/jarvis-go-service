@@ -24,14 +24,20 @@ GROUP=jarvis
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
-ARG_REMOTE=http://192.168.1.111:8082
+# ex: http://192.168.1.111:8082
+ARG_REMOTE=http://127.0.0.1:8080
+# ex: remote-module-name
+ARG_REMOTE_NAME=default
+# ex: 192.168.1.47
+ARG_HOST=0.0.0.0
+ARG_PORT=7000
 ARG_WIRINGPI=false
 ARG_MFRC522=false
 ARG_WIRINGPI=false
 ARG_TELEINFO=false
 
 EXECUTABLE_COMMAND=/home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
-EXECUTABLE_ARGS="`echo start --jarvis.module.interface 0.0.0.0 --jarvis.module.port 7000 --jarvis.server.url ${ARG_REMOTE} --jarvis.option.wiringpi ${ARG_WIRINGPI} --jarvis.option.mfrc522 ${ARG_MFRC522} --jarvis.option.teleinfo ${ARG_TELEINFO}`"
+EXECUTABLE_ARGS="`echo start --jarvis.module.name ${ARG_REMOTE_NAME} --jarvis.module.interface ${ARG_HOST} --jarvis.module.port ${ARG_PORT} --jarvis.server.url ${ARG_REMOTE} --jarvis.option.wiringpi ${ARG_WIRINGPI} --jarvis.option.mfrc522 ${ARG_MFRC522} --jarvis.option.teleinfo ${ARG_TELEINFO}`"
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh

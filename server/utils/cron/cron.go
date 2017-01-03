@@ -26,7 +26,7 @@ func (job *AdvertiseJob) Run() {
 
 	// define default value for this connector
 	m := &types.Connector{
-		Name:       "go-dio",
+		Name:       viper.GetString("jarvis.module.name"),
 		Icon:       "settings_input_antenna",
 		Adress:     "http://" + viper.GetString("jarvis.module.interface") + ":" + viper.GetString("jarvis.module.port"),
 		IsRenderer: true,
