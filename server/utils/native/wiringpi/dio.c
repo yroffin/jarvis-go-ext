@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <sched.h>
 
-extern void setuid(int value);
 extern void pinMode(int pin, int value);
 extern void digitalWrite(int pin, int value);
 extern void delayMicroseconds(int value);
