@@ -22,7 +22,6 @@ import (
 	"unsafe"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/yroffin/jarvis-go-ext/server/utils/logger"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/ioctl"
 )
 
@@ -130,7 +129,7 @@ func NewSPIDevice(bus int, chipSelect int) *SPIDevice {
 func (spi *SPIDevice) Open() error {
 	spiDevice := fmt.Sprintf("%s%d.%d", SPIDEV, spi.Bus, spi.Chip)
 
-	logger.NewLogger().WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"device": spiDevice,
 	}).Info("spi.Open")
 
