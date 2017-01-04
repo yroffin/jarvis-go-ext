@@ -35,9 +35,10 @@ ARG_WIRINGPI=false
 ARG_MFRC522=false
 ARG_WIRINGPI=false
 ARG_TELEINFO=false
+ARG_MONGODB=${ARG_HOST}
 
 EXECUTABLE_COMMAND=/home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
-EXECUTABLE_ARGS="`echo start --jarvis.module.name ${ARG_REMOTE_NAME} --jarvis.module.interface ${ARG_HOST} --jarvis.module.port ${ARG_PORT} --jarvis.server.url ${ARG_REMOTE} --jarvis.option.wiringpi ${ARG_WIRINGPI} --jarvis.option.mfrc522 ${ARG_MFRC522} --jarvis.option.teleinfo ${ARG_TELEINFO}`"
+EXECUTABLE_ARGS="`echo start --jarvis.module.name ${ARG_REMOTE_NAME} --jarvis.module.interface ${ARG_HOST} --jarvis.module.port ${ARG_PORT} --jarvis.server.url ${ARG_REMOTE} --jarvis.option.wiringpi ${ARG_WIRINGPI} --jarvis.option.mfrc522 ${ARG_MFRC522} --jarvis.option.teleinfo ${ARG_TELEINFO} --jarvis.option.mongodb ${ARG_MONGODB}`"
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
