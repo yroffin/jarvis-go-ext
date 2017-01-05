@@ -32,7 +32,7 @@ func Get(c echo.Context) error {
 
 	var razberry = razberry.GetInstance()
 
-	if c.Value("id") == "" {
+	if c.Param("id") == "" {
 		var body, err = razberry.Devices()
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, m)

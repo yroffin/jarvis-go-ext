@@ -108,11 +108,8 @@ func Start() {
 			logrus.WithFields(logrus.Fields{
 				"interface": "razberry",
 			}).Info("module")
-			razberryGroup := api.Group("/razberry")
-			{ // routes for /api/razberry
-				razberryGroup.Get("", razberryCtrl.Get)
-				razberryGroup.Get("/:id", razberryCtrl.Get)
-			}
+			api.Get("/razberry/:id", razberryCtrl.Get)
+			api.Get("/razberry", razberryCtrl.Get)
 		}
 		if viper.GetString("jarvis.option.mfrc522") == "true" {
 			logrus.WithFields(logrus.Fields{

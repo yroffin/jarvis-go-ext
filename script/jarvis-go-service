@@ -1,7 +1,7 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          jarvis
-# Required-Start:    $network $remote_fs $syslog networking ntpd
+# Required-Start:    $network $remote_fs $syslog networking
 # X-Start-After:     $network
 # Required-Stop:     $network $remote_fs $syslog
 # Default-Start:     2 3 4 5
@@ -51,7 +51,7 @@ jarvis_option_razberry.url=""
 # ex: 192.168.1.47
 jarvis_option_mongodb=${jarvis_module_interface}
 
-EXECUTABLE_COMMAND=/home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
+EXECUTABLE_COMMAND=/home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
 EXECUTABLE_ARGS="`echo start \
  --jarvis.module.name ${jarvis_module_name} \
  --jarvis.module.interface ${jarvis_module_interface} \
