@@ -58,6 +58,7 @@ EXECUTABLE_ARGS="`echo start \
  --jarvis.module.port ${jarvis_module_port} \
  --jarvis.server.url ${jarvis_server_url} \
  --jarvis.option.advertise ${jarvis_option_advertise} \
+ --jarvis.option.wiringpi ${jarvis_option_wiringpi} \
  --jarvis.option.dio ${jarvis_option_dio} \
  --jarvis.option.teleinfo ${jarvis_option_teleinfo} \
  --jarvis.option.teleinfo.active ${jarvis_option_teleinfo_active} \
@@ -66,7 +67,6 @@ EXECUTABLE_ARGS="`echo start \
  --jarvis.option.razberry.devices ${jarvis_option_razberry_devices} \
  --jarvis.option.razberry.auth ${jarvis_option_razberry_auth} \
  --jarvis.option.razberry.url ${jarvis_option_razberry_url} \
- --jarvis.option.wiringpi ${jarvis_option_wiringpi} \
  --jarvis.option.mfrc522 ${jarvis_option_mfrc522} \
  --jarvis.option.mongodb ${jarvis_option_mongodb}`"
 
