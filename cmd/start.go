@@ -64,7 +64,7 @@ func init() {
 	viper.BindPFlag("jarvis.option.mfrc522", startFlags.Lookup("jarvis.option.mfrc522"))
 	// wiringpi
 	startFlags.String("jarvis.option.wiringpi", "false", "wiringpi init on start")
-	startFlags.String("jarvis.option.wiringpi.alt", "true", "alternate code")
+	startFlags.String("jarvis.option.wiringpi.alt", "false", "alternate code")
 	viper.BindPFlag("jarvis.option.wiringpi", startFlags.Lookup("jarvis.option.wiringpi"))
 	viper.BindPFlag("jarvis.option.wiringpi.alt", startFlags.Lookup("jarvis.option.wiringpi.alt"))
 	// advertise
