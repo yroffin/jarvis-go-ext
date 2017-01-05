@@ -1,2 +1,2 @@
-go build && sh launch.cmd
+go build && launch-%1.cmd
 

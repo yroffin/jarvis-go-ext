@@ -9,19 +9,24 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
+	"strings"
+
 	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron"
 	"github.com/spf13/viper"
+	log "github.com/yroffin/jarvis-go-ext/logger"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 	"github.com/yroffin/jarvis-go-ext/server/utils/mongodb"
+	"github.com/yroffin/jarvis-go-ext/server/utils/native/razberry"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/teleinfo"
 	mgo "gopkg.in/mgo.v2"
 )
 
+// AdvertiseJob
 type AdvertiseJob struct {
 }
 
-// AdvertiseJob : Run
+// Run
 func (job *AdvertiseJob) Run() {
 
 	// define default value for this connector
@@ -41,23 +46,21 @@ func (job *AdvertiseJob) Run() {
 		Post(viper.GetString("jarvis.server.url") + "/api/connectors/*?task=register").
 		Send(string(mJSON)).
 		End()
+
+	// check for s
 	if errs != nil {
-		logrus.WithFields(logrus.Fields{
-			"errors": errs,
-		}).Error("CRON")
+		log.Default.Error("cron", log.Fields{
+			"s": errs,
+		})
 		return
 	}
 
-	if b, err := ioutil.ReadAll(resp.Body); err == nil {
-		logrus.WithFields(logrus.Fields{
+	// check for s
+	if b, err := ioutil.ReadAll(resp.Body); err != nil {
+		log.Default.Error("cron", log.Fields{
 			"body":   string(b),
 			"status": resp.Status,
-		}).Debug("CRON")
-	} else {
-		logrus.WithFields(logrus.Fields{
-			"body":   string(b),
-			"status": resp.Status,
-		}).Warn("WARN")
+		})
 	}
 }
 
@@ -82,10 +85,42 @@ func (job *CollectTeleinfoJob) Run() {
 	if err == nil {
 		job.col.Insert(&CollectTeleinfoResource{Base: base, Timestamp: time.Now()})
 	} else {
-		logrus.WithFields(logrus.Fields{
-			"data":  &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
-			"error": err,
-		}).Error("Teleinfo")
+		log.Default.Error("teleinfo", log.Fields{
+			"data": &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
+			"":     err,
+		})
+	}
+}
+
+type CollectRazberryJob struct {
+	mgo      *mongodb.MongoDriver
+	col      *mgo.Collection
+	razberry *razberry.Razberry
+	devices  []string
+}
+
+// CollectTeleinfoResource : CollectTeleinfoResource resource struct
+type CollectRazberryResource struct {
+	Timestamp time.Time
+	Name      string
+	Device    map[string]interface{}
+}
+
+// Run the job CollectTeleinfoJob
+func (job *CollectRazberryJob) Run() {
+	/**
+	 * store data
+	 */
+	for index := 0; index < len(job.devices); index++ {
+		var dev, err = job.razberry.DeviceById(job.devices[index])
+		if err == nil {
+			job.col.Insert(&CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()})
+		} else {
+			log.Default.Error("razberry", log.Fields{
+				"data": &CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()},
+				"":     err,
+			})
+		}
 	}
 }
 
@@ -107,45 +142,60 @@ func GetInstance() *CronDriver {
 
 // InitAdvertise : init cron service
 func (cronDriver *CronDriver) initAdvertise() {
-	var advertise = viper.GetString("jarvis.option.advertise")
-
-	if advertise != "" {
+	// advertise
+	if viper.GetString("jarvis.option.advertise") == "true" {
 		// first call
 		var job = new(AdvertiseJob)
 		job.Run()
 		// init cron
 		c := cron.New()
-		c.AddJob(advertise, job)
+		c.AddJob(viper.GetString("jarvis.option.advertise.cron"), job)
 		c.Start()
+		logrus.WithFields(logrus.Fields{
+			"cron": viper.GetString("jarvis.option.advertise.cron"),
+		}).Info("advertise")
 	}
 
-	/**
-	 * teleinfo
-	 */
-	var teleinfoString = viper.GetString("jarvis.option.teleinfo.collect")
-	if teleinfoString != "" {
+	// teleinfo
+	if viper.GetString("jarvis.option.teleinfo.active") == "true" {
 		// first call
 		var job = new(CollectTeleinfoJob)
 		/**
-		 * store mongo session
+		* store mongo session
 		 */
 		job.mgo = mongodb.GetInstance()
 		job.col = job.mgo.GetCollection("collect", "teleinfo")
 		job.teleinfo = teleinfo.GetInstance()
 		job.Run()
 
+		// init cron
+		c := cron.New()
+		c.AddJob(viper.GetString("jarvis.option.teleinfo.cron"), job)
+		c.Start()
 		logrus.WithFields(logrus.Fields{
-			"job": job,
-		}).Info("Teleinfo")
+			"cron": viper.GetString("jarvis.option.teleinfo.cron"),
+		}).Info("teleinfo")
+	}
+
+	// teleinfo
+	if viper.GetString("jarvis.option.razberry.active") == "true" {
+		// first call
+		var job = new(CollectRazberryJob)
+		/**
+		* store mongo session
+		 */
+		job.mgo = mongodb.GetInstance()
+		job.col = job.mgo.GetCollection("collect", "razberry")
+		job.razberry = razberry.GetInstance()
+		job.devices = strings.Split(viper.GetString("jarvis.option.razberry.devices"), ",")
+		job.Run()
 
 		// init cron
 		c := cron.New()
-		c.AddJob(teleinfoString, job)
+		c.AddJob(viper.GetString("jarvis.option.razberry.cron"), job)
 		c.Start()
+		logrus.WithFields(logrus.Fields{
+			"cron": viper.GetString("jarvis.option.razberry.cron"),
+		}).Info("razberry")
 	}
-
-	logrus.WithFields(logrus.Fields{
-		"advertise": advertise,
-		"teleinfo":  teleinfoString,
-	}).Info("CronDriver")
 }

@@ -1,0 +1,71 @@
+{
+	"variables": [],
+	"info": {
+		"name": "tests",
+		"_postman_id": "54111e2a-d84c-1b42-3972-921d59be22e7",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "razberry",
+			"description": "",
+			"item": [
+				{
+					"name": "192.168.1.111:8083/expert",
+					"request": {
+						"url": "192.168.1.111:8083/ZWaveAPI/Run/devices[6].instances[0].commandClasses",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic YWRtaW46TGhQYk9sQ3JST0c5VEhRNUlQRFY=",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://192.168.1.12:8082/api/zway/devices",
+					"request": {
+						"url": "http://localhost:7000/api/zway/devices",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "teleinfo",
+			"description": "",
+			"item": [
+				{
+					"name": "localhost:7000/api/teleinfo",
+					"request": {
+						"url": "localhost:7000/api/teleinfo",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic YWRtaW46TGhQYk9sQ3JST0c5VEhRNUlQRFY=",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

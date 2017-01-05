@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/yroffin/jarvis-go-ext/server/utils/mongodb"
 	mgo "gopkg.in/mgo.v2"
@@ -79,13 +78,24 @@ func (that *LoggerTools) Info(category string, fields Fields) {
 		that.collections[category] = that.mgo.GetCollection("logger", category)
 	}
 	mutex.Unlock()
+	fields["Level"] = "INFO"
+	that.collections[category].Insert(&LogResource{Fields: fields, Timestamp: time.Now()})
+}
+
+// Error : log error data
+func (that *LoggerTools) Error(category string, fields Fields) {
+	mutex.Lock()
+	// add collection to map il not exist
+	if _, ok := that.collections[category]; !ok {
+		that.collections[category] = that.mgo.GetCollection("logger", category)
+	}
+	mutex.Unlock()
+	fields["Level"] = "ERROR"
 	that.collections[category].Insert(&LogResource{Fields: fields, Timestamp: time.Now()})
 }
 
 // Init : Init
 func (that *LoggerTools) init() {
-	logrus.WithFields(logrus.Fields{}).Info("LoggerTools")
-
 	that.mgo = mongodb.GetInstance()
 	that.collections = make(map[string]*mgo.Collection)
 }

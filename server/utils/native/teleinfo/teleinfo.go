@@ -21,7 +21,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
 	log "github.com/yroffin/jarvis-go-ext/logger"
 )
 
@@ -61,16 +61,12 @@ var canal = make(chan byte, 5)
 // handleReadFile : read file
 func handleReadFile(device string) error {
 
-	logrus.WithFields(logrus.Fields{
-		"device": device,
-	}).Info("handleReadFile")
-
 	s, err := os.OpenFile(device, syscall.O_RDONLY|syscall.O_NOCTTY, 0666)
 
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
+		log.Default.Error("teleinfo", log.Fields{
 			"error": err,
-		}).Error("handleReadFile")
+		})
 	}
 
 	// Receive reply
@@ -85,9 +81,9 @@ func handleReadFile(device string) error {
 		}
 	}
 
-	logrus.WithFields(logrus.Fields{
+	log.Default.Info("teleinfo", log.Fields{
 		"status": "done",
-	}).Info("handleReadFile")
+	})
 
 	return nil
 }
@@ -204,17 +200,17 @@ func (teleinfo *Teleinfo) Get(key string) string {
 	return value
 }
 
-// initialize this module
+// init initialize this module
 func (that *Teleinfo) init() {
 	// add map
 	that.Entries = make(map[string]string)
 
 	// start worker
-	go handleReadFile(getTeleinfoFile())
+	go handleReadFile(viper.GetString("jarvis.option.teleinfo.file"))
 	go worker(that)
 
 	// log information
 	log.Default.Info("teleinfo", log.Fields{
-		"teleinfoFile": getTeleinfoFile(),
+		"teleinfoFile": viper.GetString("jarvis.option.teleinfo.file"),
 	})
 }

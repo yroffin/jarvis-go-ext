@@ -25,20 +25,46 @@ PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 # ex: http://192.168.1.111:8082
-ARG_REMOTE=http://127.0.0.1:8080
+jarvis_server_url=http://127.0.0.1:8080
 # ex: remote-module-name
-ARG_REMOTE_NAME=default
+jarvis_module_name=default
 # ex: 192.168.1.47
-ARG_HOST=0.0.0.0
-ARG_PORT=7000
-ARG_WIRINGPI=false
-ARG_MFRC522=false
-ARG_WIRINGPI=false
-ARG_TELEINFO=false
-ARG_MONGODB=${ARG_HOST}
+jarvis_module_interface=0.0.0.0
+jarvis_module_port=7000
+jarvis_option_wiringpi=false
+jarvis_option_mfrc522=false
+jarvis_option_wiringpi=false
+# teleinfo
+jarvis_option_teleinfo_active=false
+jarvis_option_teleinfo=false
+# razberry
+jarvis_option_razberry_active=false
+# ex: ZWayVDev_zway_7-0-49-1
+jarvis_option_razberry_devices=""
+jarvis_option_razberry=false
+# ex: Basic 0123456789=
+jarvis_option_razberry_auth=""
+# ex: http://192.168.1.111:8083/ZWaveAPI/Run
+jarvis_option_razberry.url=""
+# ex: 192.168.1.47
+jarvis_option_mongodb=${jarvis_module_interface}
 
 EXECUTABLE_COMMAND=/home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.armel
-EXECUTABLE_ARGS="`echo start --jarvis.module.name ${ARG_REMOTE_NAME} --jarvis.module.interface ${ARG_HOST} --jarvis.module.port ${ARG_PORT} --jarvis.server.url ${ARG_REMOTE} --jarvis.option.wiringpi ${ARG_WIRINGPI} --jarvis.option.mfrc522 ${ARG_MFRC522} --jarvis.option.teleinfo ${ARG_TELEINFO} --jarvis.option.mongodb ${ARG_MONGODB}`"
+EXECUTABLE_ARGS="`echo start \
+ --jarvis.module.name ${jarvis_module_name} \
+ --jarvis.module.interface ${jarvis_module_interface} \
+ --jarvis.module.port ${jarvis_module_port} \
+ --jarvis.server.url ${jarvis_server_url} \
+ --jarvis.option.teleinfo ${jarvis_option_teleinfo} \
+ --jarvis.option.teleinfo.active ${jarvis_option_teleinfo_active} \
+ --jarvis.option.razberry ${jarvis_option_razberry} \
+ --jarvis.option.razberry.active ${jarvis_option_razberry_active} \
+ --jarvis.option.razberry.devices ${jarvis_option_razberry_devices} \
+ --jarvis.option.razberry.auth ${jarvis_option_razberry_auth} \
+ --jarvis.option.razberry.url ${jarvis_option_razberry_url} \
+ --jarvis.option.wiringpi ${jarvis_option_wiringpi} \
+ --jarvis.option.mfrc522 ${jarvis_option_mfrc522} \
+ --jarvis.option.mongodb ${jarvis_option_mongodb}`"
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
