@@ -9,8 +9,8 @@ import (
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
 
-// HandlePostDio handle post on dio resource
-func HandlePostDio(c echo.Context) error {
+// Post handle post on dio resource
+func Post(c echo.Context) error {
 	var m *types.DioResource
 	c.Bind(&m)
 

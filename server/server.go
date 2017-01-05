@@ -80,6 +80,10 @@ func Start() {
 		"active": "true",
 	})
 
+	logrus.WithFields(logrus.Fields{
+		"interface": "api",
+	}).Info("module")
+
 	api := e.Group("/api")
 	{ // routes for /api
 		if viper.GetString("jarvis.option.dio") == "true" {
@@ -88,7 +92,7 @@ func Start() {
 			}).Info("module")
 			dioGroup := api.Group("/dio")
 			{ // routes for /api/dio
-				dioGroup.Post("", dioCtrl.HandlePostDio)
+				dioGroup.Post("", dioCtrl.Post)
 			}
 		}
 		if viper.GetString("jarvis.option.teleinfo") == "true" {

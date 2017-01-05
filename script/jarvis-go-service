@@ -34,6 +34,8 @@ jarvis_module_port=7000
 jarvis_option_wiringpi=false
 jarvis_option_mfrc522=false
 jarvis_option_wiringpi=false
+# dio
+jarvis_option_dio=false
 # teleinfo
 jarvis_option_teleinfo_active=false
 jarvis_option_teleinfo=false
@@ -55,6 +57,7 @@ EXECUTABLE_ARGS="`echo start \
  --jarvis.module.interface ${jarvis_module_interface} \
  --jarvis.module.port ${jarvis_module_port} \
  --jarvis.server.url ${jarvis_server_url} \
+ --jarvis.option.dio ${jarvis_option_dio} \
  --jarvis.option.teleinfo ${jarvis_option_teleinfo} \
  --jarvis.option.teleinfo.active ${jarvis_option_teleinfo_active} \
  --jarvis.option.razberry ${jarvis_option_razberry} \
