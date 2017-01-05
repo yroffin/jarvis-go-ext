@@ -8,6 +8,32 @@
 	},
 	"item": [
 		{
+			"name": "dio",
+			"description": "",
+			"item": [
+				{
+					"name": "localhost:7000/api/dio",
+					"request": {
+						"url": "localhost:7000/api/dio",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"pin\":0,\"sender\":666,\"interruptor\":1,\"on\":false}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "razberry",
 			"description": "",
 			"item": [
