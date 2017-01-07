@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo"
-	"github.com/yroffin/jarvis-go-ext/server/utils/mongodb"
+	"github.com/yroffin/jarvis-go-ext/server/service/mongodb"
 	mgo "gopkg.in/mgo.v2"
 )
 

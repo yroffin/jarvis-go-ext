@@ -41,6 +41,11 @@ func GetInstance() *MongoDriver {
 	return instance
 }
 
+// get collections
+func (mongoDriver *MongoDriver) GetCollections(db string) ([]string, error) {
+	return mongoDriver.session.DB(db).CollectionNames()
+}
+
 // get collection
 func (mongoDriver *MongoDriver) GetCollection(db string, col string) *mgo.Collection {
 	return mongoDriver.session.DB(db).C(col)

@@ -3,13 +3,14 @@ package server
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/yroffin/jarvis-go-ext/server/resource/collect"
 	dioCtrl "github.com/yroffin/jarvis-go-ext/server/resource/dio"
 	mfrc522Ctrl "github.com/yroffin/jarvis-go-ext/server/resource/mfrc522"
 	razberryCtrl "github.com/yroffin/jarvis-go-ext/server/resource/razberry"
 	teleinfoCtrl "github.com/yroffin/jarvis-go-ext/server/resource/teleinfo"
+	"github.com/yroffin/jarvis-go-ext/server/service/mongodb"
 	bus "github.com/yroffin/jarvis-go-ext/server/utils/bus"
 	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
-	"github.com/yroffin/jarvis-go-ext/server/utils/mongodb"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/razberry"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/teleinfo"
@@ -84,8 +85,15 @@ func Start() {
 		"interface": "api",
 	}).Info("module")
 
+	var collectService = collect.GetInstance()
+
 	api := e.Group("/api")
 	{ // routes for /api
+		collectGroup := api.Group("/collect")
+		{ // routes for /api/collect
+			collectGroup.Get("/:id", collectService.Get)
+			collectGroup.Get("", collectService.Get)
+		}
 		if viper.GetString("jarvis.option.dio") == "true" {
 			logrus.WithFields(logrus.Fields{
 				"interface": "dio",
