@@ -14,44 +14,26 @@
  *   limitations under the License.
  */
 
-package collect
+package collect_controller
 
 import (
 	"net/http"
-	"sync"
 
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/labstack/echo"
-	"github.com/yroffin/jarvis-go-ext/server/service/mongodb"
+	"github.com/yroffin/jarvis-go-ext/server/service/mongodb_service"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 )
 
-// MongodbService struct
-type CollectService struct {
-	mongoMiddleware *mongodb.MongoDriver
-}
-
-var instance *CollectService
-var once sync.Once
-
-// GetInstance : singleton instance
-func GetInstance() *CollectService {
-	once.Do(func() {
-		instance = new(CollectService)
-		instance.init()
-	})
-	return instance
-}
-
-// Get return all local collect
-func (that *CollectService) GetAll(c echo.Context) error {
+// GetAll return all local collect
+func GetAll(c echo.Context) error {
 	var m *types.CollectResource
 	m = new(types.CollectResource)
 	c.Bind(&m)
 
 	// retrieve all collections stored in "collect" database
-	var names, err = that.mongoMiddleware.GetCollections("collect")
+	var names, err = mongodb_service.Service().GetCollections("collect")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -76,14 +58,14 @@ func (that *CollectService) GetAll(c echo.Context) error {
 }
 
 // Get all collection elements
-func (that *CollectService) Get(c echo.Context) error {
+func Get(c echo.Context) error {
 	var m *types.CollectResource
 	m = new(types.CollectResource)
 	c.Bind(&m)
 
 	if c.Param("id") == "" {
 		// result
-		var names, err = that.findAll()
+		var names, err = findAll()
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err)
 		}
@@ -91,13 +73,13 @@ func (that *CollectService) Get(c echo.Context) error {
 	} else {
 		// result
 		if c.QueryParam("orderby") == "" {
-			var names, err = that.get(c.Param("id"))
+			var names, err = get(c.Param("id"))
 			if err != nil {
 				return c.JSON(http.StatusBadRequest, err)
 			}
 			m.Data = names
 		} else {
-			var names, err = that.getAndSort(c.Param("id"), c.QueryParam("orderby"))
+			var names, err = getAndSort(c.Param("id"), c.QueryParam("orderby"))
 			if err != nil {
 				return c.JSON(http.StatusBadRequest, err)
 			}
@@ -109,9 +91,9 @@ func (that *CollectService) Get(c echo.Context) error {
 }
 
 // findAll find all collection name in database
-func (that *CollectService) findAll() ([]string, error) {
+func findAll() ([]string, error) {
 	// retrieve all collections stored in "collect" database
-	var names, err = that.mongoMiddleware.GetCollections("collect")
+	var names, err = mongodb_service.Service().GetCollections("collect")
 	if err != nil {
 		return nil, err
 	}
@@ -132,23 +114,17 @@ func (that *CollectService) findAll() ([]string, error) {
 }
 
 // findAll find all collection name in database
-func (that *CollectService) get(name string) ([]bson.M, error) {
+func get(name string) ([]bson.M, error) {
 	// retrieve all collections stored in "collect" database
 	tuples := []bson.M{}
-	that.mongoMiddleware.GetCollection("collect", name).Find(bson.M{}).All(&tuples)
+	mongodb_service.Service().GetCollection("collect", name).Find(bson.M{}).All(&tuples)
 	return tuples, nil
 }
 
 // findAll find all collection name in database
-func (that *CollectService) getAndSort(name string, sort string) ([]bson.M, error) {
+func getAndSort(name string, sort string) ([]bson.M, error) {
 	// retrieve all collections stored in "collect" database
 	tuples := []bson.M{}
-	that.mongoMiddleware.GetCollection("collect", name).Find(bson.M{}).Sort(sort).All(&tuples)
+	mongodb_service.Service().GetCollection("collect", name).Find(bson.M{}).Sort(sort).All(&tuples)
 	return tuples, nil
-}
-
-// init initialize service
-func (that *CollectService) init() error {
-	that.mongoMiddleware = mongodb.GetInstance()
-	return nil
 }

@@ -14,25 +14,33 @@
  *   limitations under the License.
  */
 
-package teleinfo
+package razberry_controller
 
 import (
 	"net/http"
 
 	"github.com/labstack/echo"
+	"github.com/yroffin/jarvis-go-ext/server/service/razberry_service"
 	"github.com/yroffin/jarvis-go-ext/server/types"
-	"github.com/yroffin/jarvis-go-ext/server/utils/native/teleinfo"
 )
 
-// HandleGet : handler for get
-func HandleGetTeleinfo(c echo.Context) error {
-	var m *types.TeleinfoResource
-	m = new(types.TeleinfoResource)
+// Get handler for get
+func Get(c echo.Context) error {
+	var m *types.RazberryResource
+	m = new(types.RazberryResource)
 	c.Bind(&m)
 
-	var instance = teleinfo.GetInstance()
-	m.Entries = make(map[string]string)
-	instance.GetEntries(m.Entries)
-
-	return c.JSON(http.StatusOK, m)
+	if c.Param("id") == "" {
+		var body, err = razberry_service.Service().Devices()
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, m)
+		}
+		return c.JSON(http.StatusOK, body)
+	} else {
+		var body, err = razberry_service.Service().DeviceById(c.Param("id"))
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, m)
+		}
+		return c.JSON(http.StatusOK, body)
+	}
 }

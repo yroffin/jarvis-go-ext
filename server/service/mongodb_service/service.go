@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package mongodb
+package mongodb_service
 
 import (
 	"sync"
@@ -24,69 +24,69 @@ import (
 	mgo "gopkg.in/mgo.v2"
 )
 
-// MongoDriver : mongo driver instance
-type MongoDriver struct {
+// MongoService : mongo driver instance
+type MongoService struct {
 	session *mgo.Session
 }
 
-var instance *MongoDriver
+var instance *MongoService
 var once sync.Once
 
 // GetInstance : singleton instance
-func GetInstance() *MongoDriver {
+func Service() *MongoService {
 	once.Do(func() {
-		instance = new(MongoDriver)
+		instance = new(MongoService)
 		instance.init()
 	})
 	return instance
 }
 
 // get collections
-func (mongoDriver *MongoDriver) GetCollections(db string) ([]string, error) {
-	return mongoDriver.session.DB(db).CollectionNames()
+func (MongoService *MongoService) GetCollections(db string) ([]string, error) {
+	return MongoService.session.DB(db).CollectionNames()
 }
 
 // get collection
-func (mongoDriver *MongoDriver) GetCollection(db string, col string) *mgo.Collection {
-	return mongoDriver.session.DB(db).C(col)
+func (MongoService *MongoService) GetCollection(db string, col string) *mgo.Collection {
+	return MongoService.session.DB(db).C(col)
 }
 
 // store element
-func (mongoDriver *MongoDriver) StoreData(db string, col string, data interface{}) interface{} {
-	return mongoDriver.Store(mongoDriver.GetCollection(db, col), data)
+func (MongoService *MongoService) StoreData(db string, col string, data interface{}) interface{} {
+	return MongoService.Store(MongoService.GetCollection(db, col), data)
 }
 
 // store element
-func (mongoDriver *MongoDriver) Store(col *mgo.Collection, data interface{}) interface{} {
+func (MongoService *MongoService) Store(col *mgo.Collection, data interface{}) interface{} {
 	var err = col.Insert(&data)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"data":  data,
 			"error": err,
-		}).Error("MongoDriver")
+		}).Error("MongoService")
 	}
 	return data
 }
 
 // Close session
-func (mongoDriver *MongoDriver) Close() {
-	defer mongoDriver.session.Close()
+func (MongoService *MongoService) Close() {
+	defer MongoService.session.Close()
 }
 
 // initialize this module
-func (mongoDriver *MongoDriver) init() {
+func (MongoService *MongoService) init() {
 	var host = viper.GetString("jarvis.option.mongodb")
 
 	logrus.WithFields(logrus.Fields{
 		"host": host,
-	}).Info("MongoDriver")
+	}).Info("MongoService")
 
 	// get mongo session
 	session, err := mgo.Dial(host)
 	if err != nil {
 		panic(err)
 	}
-	mongoDriver.session = session
+	MongoService.session = session
 
 	var info, _ = session.BuildInfo()
 
@@ -94,5 +94,5 @@ func (mongoDriver *MongoDriver) init() {
 		"host":    host,
 		"version": info.Version,
 		"sys":     info.SysInfo,
-	}).Info("MongoDriver")
+	}).Info("MongoService")
 }

@@ -1,4 +1,4 @@
-package mfrc522
+package mfrc522_controller
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 )
 
 // HandlePost : handler for post
-func HandlePostMfrc522(c echo.Context) error {
+func Post(c echo.Context) error {
 	var m *types.Mfrc522Resource
 	c.Bind(&m)
 
@@ -23,7 +23,7 @@ func HandlePostMfrc522(c echo.Context) error {
 }
 
 // HandlePostMfrc522DumpClassic1K : handler for post
-func HandlePostMfrc522DumpClassic1K(c echo.Context) error {
+func PostDumpClassic1K(c echo.Context) error {
 	var m *types.Mfrc522DumpResource
 	c.Bind(&m)
 
@@ -32,6 +32,7 @@ func HandlePostMfrc522DumpClassic1K(c echo.Context) error {
 		"uid": m.Uid,
 	}).Info("mfrc522/dump")
 
+	// get native service (low level)
 	var instance = mfrc522.GetInstance()
 
 	// dump nfc tag
@@ -58,7 +59,7 @@ func HandlePostMfrc522DumpClassic1K(c echo.Context) error {
 }
 
 // HandlePostMfrc522WriteClassic1K : handler for post
-func HandlePostMfrc522WriteClassic1K(c echo.Context) error {
+func PostWriteClassic1K(c echo.Context) error {
 	var m *types.Mfrc522WriteResource
 	c.Bind(&m)
 
@@ -71,7 +72,7 @@ func HandlePostMfrc522WriteClassic1K(c echo.Context) error {
 }
 
 // HandlePostMfrc522Request : handler for post
-func HandlePostMfrc522Request(c echo.Context) error {
+func PostRequest(c echo.Context) error {
 	var m *types.Mfrc522DumpResource
 	c.Bind(&m)
 
@@ -83,7 +84,7 @@ func HandlePostMfrc522Request(c echo.Context) error {
 }
 
 // HandlePostMfrc522AntiColl : handler for post
-func HandlePostMfrc522AntiColl(c echo.Context) error {
+func PostAntiColl(c echo.Context) error {
 	var m *types.Mfrc522Resource
 	c.Bind(&m)
 

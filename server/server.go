@@ -3,23 +3,23 @@ package server
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/yroffin/jarvis-go-ext/server/resource/collect"
-	dioCtrl "github.com/yroffin/jarvis-go-ext/server/resource/dio"
-	mfrc522Ctrl "github.com/yroffin/jarvis-go-ext/server/resource/mfrc522"
-	razberryCtrl "github.com/yroffin/jarvis-go-ext/server/resource/razberry"
-	teleinfoCtrl "github.com/yroffin/jarvis-go-ext/server/resource/teleinfo"
-	"github.com/yroffin/jarvis-go-ext/server/service/mongodb"
-	bus "github.com/yroffin/jarvis-go-ext/server/utils/bus"
-	"github.com/yroffin/jarvis-go-ext/server/utils/cron"
+	"github.com/yroffin/jarvis-go-ext/server/controller/collect_controller"
+	"github.com/yroffin/jarvis-go-ext/server/controller/dio_controller"
+	"github.com/yroffin/jarvis-go-ext/server/controller/mfrc522_controller"
+	"github.com/yroffin/jarvis-go-ext/server/controller/razberry_controller"
+	"github.com/yroffin/jarvis-go-ext/server/controller/teleinfo_controller"
+	"github.com/yroffin/jarvis-go-ext/server/service/bus_service"
+	"github.com/yroffin/jarvis-go-ext/server/service/cron_service"
+	"github.com/yroffin/jarvis-go-ext/server/service/mongodb_service"
+	"github.com/yroffin/jarvis-go-ext/server/service/razberry_service"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
-	"github.com/yroffin/jarvis-go-ext/server/utils/native/razberry"
-	"github.com/yroffin/jarvis-go-ext/server/utils/native/teleinfo"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
 	"github.com/labstack/echo/middleware"
 	log "github.com/yroffin/jarvis-go-ext/logger"
+	"github.com/yroffin/jarvis-go-ext/server/service/teleinfo_service"
 )
 
 // Start : start the jarvis server
@@ -30,7 +30,7 @@ func Start() {
 	// setup mongodb
 	if viper.GetString("jarvis.option.mongodb") != "" {
 		// init MongoDb driver
-		mongodb.GetInstance()
+		mongodb_service.Service()
 		logrus.WithFields(logrus.Fields{
 			"active": "true",
 		}).Info("mongodb")
@@ -60,7 +60,7 @@ func Start() {
 	// setup teleinfo
 	if viper.GetString("jarvis.option.teleinfo") == "true" {
 		// init teleinfo service
-		teleinfo.GetInstance()
+		teleinfo_service.Service()
 		log.Default.Info("teleinfo", log.Fields{
 			"active": "true",
 		})
@@ -69,14 +69,14 @@ func Start() {
 	// setup razberry
 	if viper.GetString("jarvis.option.razberry") == "true" {
 		// init razberry service
-		razberry.GetInstance()
+		razberry_service.Service()
 		log.Default.Info("razberry", log.Fields{
 			"active": "true",
 		})
 	}
 
 	// setup cron manager
-	cron.GetInstance()
+	cron_service.Service()
 	log.Default.Info("cron", log.Fields{
 		"active": "true",
 	})
@@ -85,14 +85,12 @@ func Start() {
 		"interface": "api",
 	}).Info("module")
 
-	var collectService = collect.GetInstance()
-
 	api := e.Group("/api")
 	{ // routes for /api
 		collectGroup := api.Group("/collect")
 		{ // routes for /api/collect
-			collectGroup.Get("/:id", collectService.Get)
-			collectGroup.Get("", collectService.Get)
+			collectGroup.Get("/:id", collect_controller.Get)
+			collectGroup.Get("", collect_controller.Get)
 		}
 		if viper.GetString("jarvis.option.dio") == "true" {
 			logrus.WithFields(logrus.Fields{
@@ -100,7 +98,7 @@ func Start() {
 			}).Info("module")
 			dioGroup := api.Group("/dio")
 			{ // routes for /api/dio
-				dioGroup.Post("", dioCtrl.Post)
+				dioGroup.Post("", dio_controller.Post)
 			}
 		}
 		if viper.GetString("jarvis.option.teleinfo") == "true" {
@@ -109,15 +107,15 @@ func Start() {
 			}).Info("module")
 			teleinfoGroup := api.Group("/teleinfo")
 			{ // routes for /api/teleinfo
-				teleinfoGroup.Get("", teleinfoCtrl.HandleGetTeleinfo)
+				teleinfoGroup.Get("", teleinfo_controller.Get)
 			}
 		}
 		if viper.GetString("jarvis.option.razberry") == "true" {
 			logrus.WithFields(logrus.Fields{
 				"interface": "razberry",
 			}).Info("module")
-			api.Get("/razberry/:id", razberryCtrl.Get)
-			api.Get("/razberry", razberryCtrl.Get)
+			api.Get("/razberry/:id", razberry_controller.Get)
+			api.Get("/razberry", razberry_controller.Get)
 		}
 		if viper.GetString("jarvis.option.mfrc522") == "true" {
 			logrus.WithFields(logrus.Fields{
@@ -125,18 +123,18 @@ func Start() {
 			}).Info("module")
 			mfrc522Group := api.Group("/mfrc522")
 			{ // routes for /api/mfrc522
-				mfrc522Group.Post("", mfrc522Ctrl.HandlePostMfrc522)
+				mfrc522Group.Post("", mfrc522_controller.Post)
 				mfrc522Anticoll := mfrc522Group.Group("/anticoll")
 				{ // routes for /api/mfrc522/anticoll
-					mfrc522Anticoll.Post("", mfrc522Ctrl.HandlePostMfrc522AntiColl)
+					mfrc522Anticoll.Post("", mfrc522_controller.PostAntiColl)
 				}
 				mfrc522Request := mfrc522Group.Group("/request")
 				{ // routes for /api/mfrc522/request
-					mfrc522Request.Post("", mfrc522Ctrl.HandlePostMfrc522Request)
+					mfrc522Request.Post("", mfrc522_controller.PostRequest)
 				}
 				mfrc522DumpClassic1K := mfrc522Group.Group("/dump")
 				{ // routes for /api/mfrc522/dump
-					mfrc522DumpClassic1K.Post("", mfrc522Ctrl.HandlePostMfrc522DumpClassic1K)
+					mfrc522DumpClassic1K.Post("", mfrc522_controller.PostDumpClassic1K)
 				}
 			}
 		}
@@ -153,7 +151,7 @@ func Start() {
 
 	if viper.GetString("jarvis.option.nfctag") == "true" {
 		// start nfc capture
-		bus.Start()
+		bus_service.Service()
 		log.Default.Info("nfctag", log.Fields{
 			"active": "true",
 		})

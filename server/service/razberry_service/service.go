@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package razberry
+package razberry_service
 
 import (
 	"errors"
@@ -31,43 +31,43 @@ import (
 	log "github.com/yroffin/jarvis-go-ext/logger"
 )
 
-// Razberry : instance Razberry device struct
-type Razberry struct {
+// RazberryService service descriptor
+type RazberryService struct {
 	Url  string
 	Auth string
 }
 
-var instance *Razberry
+var instance *RazberryService
 var once sync.Once
 var mutex = &sync.Mutex{}
 
-// GetInstance : singleton instance
-func GetInstance() *Razberry {
+// RazberryService singleton instance
+func Service() *RazberryService {
 	once.Do(func() {
-		instance = new(Razberry)
+		instance = new(RazberryService)
 		instance.init()
 	})
 	return instance
 }
 
 // Devices get device by id
-func (that *Razberry) Devices() (map[string]interface{}, error) {
+func (that *RazberryService) Devices() (map[string]interface{}, error) {
 	return that.get("/devices")
 }
 
 // Devices get device by id
-func (that *Razberry) DeviceById(id string) (map[string]interface{}, error) {
+func (that *RazberryService) DeviceById(id string) (map[string]interface{}, error) {
 	var index = strings.Split(id, "_")
 	var indexes = strings.Split(index[2], "-")
 	return that.get("/devices[" + indexes[0] + "].instances[" + indexes[1] + "].commandClasses[" + indexes[2] + "].data[" + indexes[3] + "]")
 }
 
 // Get
-func (that *Razberry) get(uri string) (map[string]interface{}, error) {
+func (that *RazberryService) get(uri string) (map[string]interface{}, error) {
 
 	logrus.WithFields(logrus.Fields{
 		"uri": that.Url + uri,
-	}).Debug("razberry")
+	}).Debug("razberryService")
 
 	request := gorequest.New().Timeout(2 * time.Second)
 
@@ -106,7 +106,7 @@ func (that *Razberry) get(uri string) (map[string]interface{}, error) {
 }
 
 // initialize this module
-func (that *Razberry) init() {
+func (that *RazberryService) init() {
 	that.Url = viper.GetString("jarvis.option.razberry.url")
 	that.Auth = viper.GetString("jarvis.option.razberry.auth")
 

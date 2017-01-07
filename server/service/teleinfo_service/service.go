@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package teleinfo
+package teleinfo_service
 
 import (
 	"os"
@@ -31,7 +31,7 @@ import (
 // Cf. https://hallard.me/gestion-de-la-teleinfo-avec-un-raspberry-pi-et-une-carte-arduipi/
 
 // Teleinfo : instance Teleinfo device struct
-type Teleinfo struct {
+type TeleinfoService struct {
 	Entries map[string]string
 }
 
@@ -42,14 +42,14 @@ type TeleinfoTrame struct {
 	hecksum   string // CHECKSUM (caractère de contrôle : Somme de caractère)
 }
 
-var instance *Teleinfo
+var instance *TeleinfoService
 var once sync.Once
 var mutex = &sync.Mutex{}
 
 // GetInstance : singleton instance
-func GetInstance() *Teleinfo {
+func Service() *TeleinfoService {
 	once.Do(func() {
-		instance = new(Teleinfo)
+		instance = new(TeleinfoService)
 		instance.init()
 	})
 	return instance
@@ -99,14 +99,14 @@ func handleReadFile(device string) error {
  */
 
 // submit trame
-func submit(teleinfo *Teleinfo, trame TeleinfoTrame) {
+func (that *TeleinfoService) submit(trame TeleinfoTrame) {
 	mutex.Lock()
-	teleinfo.Entries[trame.etiquette] = trame.data
+	that.Entries[trame.etiquette] = trame.data
 	mutex.Unlock()
 }
 
 // single trame
-func handleTrame(teleinfo *Teleinfo, trame string) {
+func (that *TeleinfoService) handleTrame(trame string) {
 	var espace int
 	var send TeleinfoTrame
 	for i := 0; i < len(trame); i++ {
@@ -125,11 +125,11 @@ func handleTrame(teleinfo *Teleinfo, trame string) {
 		}
 	}
 	// submit new value
-	submit(teleinfo, send)
+	that.submit(send)
 }
 
 // all trames detection
-func handleTrames(teleinfo *Teleinfo, trame string) {
+func (that *TeleinfoService) handleTrames(trame string) {
 	var send string
 	for i := 0; i < len(trame); i++ {
 		switch {
@@ -137,7 +137,7 @@ func handleTrames(teleinfo *Teleinfo, trame string) {
 			send = ""
 			continue
 		case trame[i] == 0x0D:
-			handleTrame(teleinfo, send)
+			that.handleTrame(send)
 			continue
 		default:
 			send += string([]byte{trame[i]})
@@ -146,7 +146,7 @@ func handleTrames(teleinfo *Teleinfo, trame string) {
 }
 
 // worker to consume file
-func worker(teleinfo *Teleinfo) {
+func worker(that *TeleinfoService) {
 	var trame string
 	var etx bool
 
@@ -164,7 +164,7 @@ func worker(teleinfo *Teleinfo) {
 		switch {
 		case x == 0x03:
 			// wait for ETX 0x003
-			handleTrames(teleinfo, trame)
+			that.handleTrames(trame)
 			break
 		case x == 0x02:
 			// wait for STX 0x002
@@ -178,21 +178,21 @@ func worker(teleinfo *Teleinfo) {
 	}
 }
 
-// get values
-func (teleinfo *Teleinfo) GetEntries(entries map[string]string) map[string]string {
+// GetEntries load entries
+func (that *TeleinfoService) GetEntries(entries map[string]string) map[string]string {
 	mutex.Lock()
-	for key, value := range teleinfo.Entries {
+	for key, value := range that.Entries {
 		entries[key] = value
 	}
 	mutex.Unlock()
 	return entries
 }
 
-// get values
-func (teleinfo *Teleinfo) Get(key string) string {
+// Get get values
+func (that *TeleinfoService) Get(key string) string {
 	var value string
 	mutex.Lock()
-	i, ex := teleinfo.Entries[key]
+	i, ex := that.Entries[key]
 	if ex {
 		value = i
 	}
@@ -201,7 +201,7 @@ func (teleinfo *Teleinfo) Get(key string) string {
 }
 
 // init initialize this module
-func (that *Teleinfo) init() {
+func (that *TeleinfoService) init() {
 	// add map
 	that.Entries = make(map[string]string)
 

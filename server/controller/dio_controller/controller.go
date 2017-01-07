@@ -1,10 +1,10 @@
-package dio
+package dio_controller
 
 import (
 	"net/http"
 
 	"github.com/labstack/echo"
-	log "github.com/yroffin/jarvis-go-ext/logger"
+	"github.com/yroffin/jarvis-go-ext/logger"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/wiringpi"
 )
@@ -14,7 +14,7 @@ func Post(c echo.Context) error {
 	var m *types.DioResource
 	c.Bind(&m)
 
-	log.Default.Info("dio", log.Fields{
+	logger.Default.Info("dio", logger.Fields{
 		"pin":         m.Pin,
 		"sender":      m.Sender,
 		"interruptor": m.Interuptor,

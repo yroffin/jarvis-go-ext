@@ -1,4 +1,4 @@
-package cron
+package cron_service
 
 import (
 	"encoding/json"
@@ -14,13 +14,30 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron"
 	"github.com/spf13/viper"
-	log "github.com/yroffin/jarvis-go-ext/logger"
-	"github.com/yroffin/jarvis-go-ext/server/service/mongodb"
+	"github.com/yroffin/jarvis-go-ext/logger"
+	"github.com/yroffin/jarvis-go-ext/server/service/mongodb_service"
+	"github.com/yroffin/jarvis-go-ext/server/service/razberry_service"
+	"github.com/yroffin/jarvis-go-ext/server/service/teleinfo_service"
 	"github.com/yroffin/jarvis-go-ext/server/types"
-	"github.com/yroffin/jarvis-go-ext/server/utils/native/razberry"
-	"github.com/yroffin/jarvis-go-ext/server/utils/native/teleinfo"
 	mgo "gopkg.in/mgo.v2"
 )
+
+// CronService service descriptor
+type CronService struct {
+}
+
+var instance *CronService
+var once sync.Once
+var mutex = &sync.Mutex{}
+
+// CronService singleton instance
+func Service() *CronService {
+	once.Do(func() {
+		instance = new(CronService)
+		instance.init()
+	})
+	return instance
+}
 
 // AdvertiseJob
 type AdvertiseJob struct {
@@ -49,7 +66,7 @@ func (job *AdvertiseJob) Run() {
 
 	// check for s
 	if errs != nil {
-		log.Default.Error("cron", log.Fields{
+		logger.Default.Error("cron", logger.Fields{
 			"s": errs,
 		})
 		return
@@ -57,17 +74,18 @@ func (job *AdvertiseJob) Run() {
 
 	// check for s
 	if b, err := ioutil.ReadAll(resp.Body); err != nil {
-		log.Default.Error("cron", log.Fields{
+		logger.Default.Error("cron", logger.Fields{
 			"body":   string(b),
 			"status": resp.Status,
 		})
 	}
 }
 
+// CollectTeleinfoJob collect job
 type CollectTeleinfoJob struct {
-	mgo      *mongodb.MongoDriver
+	mgo      *mongodb_service.MongoService
 	col      *mgo.Collection
-	teleinfo *teleinfo.Teleinfo
+	teleinfo *teleinfo_service.TeleinfoService
 }
 
 // CollectTeleinfoResource : CollectTeleinfoResource resource struct
@@ -85,21 +103,22 @@ func (job *CollectTeleinfoJob) Run() {
 	if err == nil {
 		job.col.Insert(&CollectTeleinfoResource{Base: base, Timestamp: time.Now()})
 	} else {
-		log.Default.Error("teleinfo", log.Fields{
+		logger.Default.Error("teleinfo", logger.Fields{
 			"data": &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
 			"":     err,
 		})
 	}
 }
 
+// CollectRazberryJob collect job
 type CollectRazberryJob struct {
-	mgo      *mongodb.MongoDriver
+	mgo      *mongodb_service.MongoService
 	col      *mgo.Collection
-	razberry *razberry.Razberry
+	razberry *razberry_service.RazberryService
 	devices  []string
 }
 
-// CollectTeleinfoResource : CollectTeleinfoResource resource struct
+// CollectRazberryResource collect resource
 type CollectRazberryResource struct {
 	Timestamp time.Time
 	Name      string
@@ -116,7 +135,7 @@ func (job *CollectRazberryJob) Run() {
 		if err == nil {
 			job.col.Insert(&CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()})
 		} else {
-			log.Default.Error("razberry", log.Fields{
+			logger.Default.Error("razberry", logger.Fields{
 				"data": &CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()},
 				"":     err,
 			})
@@ -124,24 +143,8 @@ func (job *CollectRazberryJob) Run() {
 	}
 }
 
-// CronDriver : cron driver instance
-type CronDriver struct {
-}
-
-var instance *CronDriver
-var once sync.Once
-
-// GetInstance : singleton instance
-func GetInstance() *CronDriver {
-	once.Do(func() {
-		instance = new(CronDriver)
-		instance.initAdvertise()
-	})
-	return instance
-}
-
 // InitAdvertise : init cron service
-func (cronDriver *CronDriver) initAdvertise() {
+func (that *CronService) init() {
 	// advertise
 	if viper.GetString("jarvis.option.advertise") == "true" {
 		// first call
@@ -163,9 +166,9 @@ func (cronDriver *CronDriver) initAdvertise() {
 		/**
 		* store mongo session
 		 */
-		job.mgo = mongodb.GetInstance()
+		job.mgo = mongodb_service.Service()
 		job.col = job.mgo.GetCollection("collect", "teleinfo")
-		job.teleinfo = teleinfo.GetInstance()
+		job.teleinfo = teleinfo_service.Service()
 		job.Run()
 
 		// init cron
@@ -184,9 +187,9 @@ func (cronDriver *CronDriver) initAdvertise() {
 		/**
 		* store mongo session
 		 */
-		job.mgo = mongodb.GetInstance()
+		job.mgo = mongodb_service.Service()
 		job.col = job.mgo.GetCollection("collect", "razberry")
-		job.razberry = razberry.GetInstance()
+		job.razberry = razberry_service.Service()
 		job.devices = strings.Split(viper.GetString("jarvis.option.razberry.devices"), ",")
 		job.Run()
 

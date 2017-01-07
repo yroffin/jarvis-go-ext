@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/labstack/echo"
-	"github.com/yroffin/jarvis-go-ext/server/service/mongodb"
+	"github.com/yroffin/jarvis-go-ext/server/service/mongodb_service"
 	mgo "gopkg.in/mgo.v2"
 )
 
 // LoggerTools : instance logger
 type LoggerTools struct {
-	mgo         *mongodb.MongoDriver
+	mgo         *mongodb_service.MongoService
 	collections map[string]*mgo.Collection
 }
 
@@ -96,6 +96,6 @@ func (that *LoggerTools) Error(category string, fields Fields) {
 
 // Init : Init
 func (that *LoggerTools) init() {
-	that.mgo = mongodb.GetInstance()
+	that.mgo = mongodb_service.Service()
 	that.collections = make(map[string]*mgo.Collection)
 }
