@@ -90,11 +90,19 @@ func (that *CollectService) Get(c echo.Context) error {
 		m.Collections = names
 	} else {
 		// result
-		var names, err = that.get(c.Param("id"))
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
+		if c.QueryParam("orderby") == "" {
+			var names, err = that.get(c.Param("id"))
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, err)
+			}
+			m.Data = names
+		} else {
+			var names, err = that.getAndSort(c.Param("id"), c.QueryParam("orderby"))
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, err)
+			}
+			m.Data = names
 		}
-		m.Data = names
 	}
 
 	return c.JSON(http.StatusOK, m)
@@ -128,6 +136,14 @@ func (that *CollectService) get(name string) ([]bson.M, error) {
 	// retrieve all collections stored in "collect" database
 	tuples := []bson.M{}
 	that.mongoMiddleware.GetCollection("collect", name).Find(bson.M{}).All(&tuples)
+	return tuples, nil
+}
+
+// findAll find all collection name in database
+func (that *CollectService) getAndSort(name string, sort string) ([]bson.M, error) {
+	// retrieve all collections stored in "collect" database
+	tuples := []bson.M{}
+	that.mongoMiddleware.GetCollection("collect", name).Find(bson.M{}).Sort(sort).All(&tuples)
 	return tuples, nil
 }
 
