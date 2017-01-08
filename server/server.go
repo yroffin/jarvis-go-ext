@@ -89,7 +89,7 @@ func Start() {
 	{ // routes for /api
 		collectGroup := api.Group("/collect")
 		{ // routes for /api/collect
-			collectGroup.Get("/:id", collect_controller.Get)
+			collectGroup.Post("/:id", collect_controller.Post)
 			collectGroup.Get("", collect_controller.Get)
 		}
 		if viper.GetString("jarvis.option.dio") == "true" {

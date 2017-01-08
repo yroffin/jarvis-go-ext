@@ -18,9 +18,12 @@ package collect_controller
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/yroffin/jarvis-go-ext/server/service/mongodb_service"
 	"github.com/yroffin/jarvis-go-ext/server/types"
@@ -54,44 +57,94 @@ func GetAll(c echo.Context) error {
 	// result
 	m.Collections = result
 
+	// X-Total-Count
+	c.Response().Header().Set("X-Total-Count", strconv.Itoa(len(m.Collections)))
 	return c.JSON(http.StatusOK, m)
+}
+
+// parse any data
+func parse(field map[string]interface{}, key string, value interface{}) error {
+	// check for key not null
+	if value.(map[string]interface{})[key] != nil {
+		// no extract object {"format": "value""}
+		for keyToDecode, valueToDecode := range value.(map[string]interface{})[key].(map[string]interface{}) {
+			var decoded interface{}
+			var err error
+			if keyToDecode == "RFC3339" {
+				decoded, err = time.Parse(time.RFC3339, valueToDecode.(string))
+			}
+			if err != nil {
+				logrus.WithFields(logrus.Fields{
+					"err": err.Error(),
+				}).Error("collect")
+				return err
+			}
+			field[key] = decoded
+		}
+	}
+	return nil
+}
+
+// Post all collection elements
+func Post(c echo.Context) error {
+	var m *types.PostCollectResource
+	c.Bind(&m)
+
+	var q = map[string]interface{}{}
+	for key, value := range m.Find {
+		var field = map[string]interface{}{}
+		var err error
+		// $gt handler
+		err = parse(field, "$gt", value)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, bson.M{"error": err.Error(), "detail": err})
+		}
+		// $lt handler
+		err = parse(field, "$lt", value)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, bson.M{"error": err.Error(), "detail": err})
+		}
+		q[key] = field
+	}
+
+	var r = new(types.CollectResource)
+
+	// result
+	if m.OrderBy == nil {
+		var data, err = get(c.Param("id"), q)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+		r.Data = data
+	} else {
+		var data, err = getAndSort(c.Param("id"), q, m.OrderBy)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+		r.Data = data
+	}
+
+	// X-Total-Count
+	c.Response().Header().Set("X-Total-Count", strconv.Itoa(len(r.Data)))
+	return c.JSON(http.StatusOK, r)
 }
 
 // Get all collection elements
 func Get(c echo.Context) error {
-	var m *types.CollectResource
-	m = new(types.CollectResource)
-	c.Bind(&m)
-
-	if c.Param("id") == "" {
-		// result
-		var names, err = findAll()
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
-		}
-		m.Collections = names
-	} else {
-		// result
-		if c.QueryParam("orderby") == "" {
-			var names, err = get(c.Param("id"))
-			if err != nil {
-				return c.JSON(http.StatusBadRequest, err)
-			}
-			m.Data = names
-		} else {
-			var names, err = getAndSort(c.Param("id"), c.QueryParam("orderby"))
-			if err != nil {
-				return c.JSON(http.StatusBadRequest, err)
-			}
-			m.Data = names
-		}
+	// result
+	var details, err = findAll()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	return c.JSON(http.StatusOK, m)
+	var body = new(types.GetCollectResource)
+	body.Collections = details
+
+	return c.JSON(http.StatusOK, body)
 }
 
 // findAll find all collection name in database
-func findAll() ([]string, error) {
+func findAll() ([]types.GetCollectResourceDetail, error) {
 	// retrieve all collections stored in "collect" database
 	var names, err = mongodb_service.Service().GetCollections("collect")
 	if err != nil {
@@ -108,23 +161,42 @@ func findAll() ([]string, error) {
 		}
 	}
 
+	// result contains all collections
 	var result = make([]string, counter)
 	copy(result, reduce[0:counter])
-	return result, nil
+
+	// convert it to GetCollectResourceDetail
+	var arr = make([]types.GetCollectResourceDetail, len(result))
+	for index := 0; index < len(result); index++ {
+		arr[index].Name = result[index]
+		// find one sample entity
+		tuples := []bson.M{}
+		mongodb_service.Service().
+			GetCollection("collect", arr[index].Name).
+			Find(&bson.M{}).
+			Sort("-$natural").
+			Limit(1).
+			All(&tuples)
+		if len(tuples) > 0 {
+			arr[index].Entity = tuples[0]
+		}
+	}
+
+	return arr, nil
 }
 
 // findAll find all collection name in database
-func get(name string) ([]bson.M, error) {
+func get(name string, m bson.M) ([]bson.M, error) {
 	// retrieve all collections stored in "collect" database
 	tuples := []bson.M{}
-	mongodb_service.Service().GetCollection("collect", name).Find(bson.M{}).All(&tuples)
+	mongodb_service.Service().GetCollection("collect", name).Find(m).All(&tuples)
 	return tuples, nil
 }
 
 // findAll find all collection name in database
-func getAndSort(name string, sort string) ([]bson.M, error) {
+func getAndSort(name string, m bson.M, sort []string) ([]bson.M, error) {
 	// retrieve all collections stored in "collect" database
 	tuples := []bson.M{}
-	mongodb_service.Service().GetCollection("collect", name).Find(bson.M{}).Sort(sort).All(&tuples)
+	mongodb_service.Service().GetCollection("collect", name).Find(m).Sort(sort[0]).All(&tuples)
 	return tuples, nil
 }

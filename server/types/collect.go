@@ -20,6 +20,23 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+// PostCollectResource post query
+type PostCollectResource struct {
+	Find    bson.M   `json:"find,omitempty"`
+	OrderBy []string `json:"orderby,omitempty"`
+}
+
+// GetCollectResource query
+type GetCollectResource struct {
+	Collections []GetCollectResourceDetail `json:"collections,omitempty"`
+}
+
+// GetCollectResourceDetail detail
+type GetCollectResourceDetail struct {
+	Name   string `json:"name,omitempty"`
+	Entity bson.M `json:"entity,omitempty"`
+}
+
 // CollectResource : connector struct
 type CollectResource struct {
 	Collections []string `json:"collections,omitempty"`
