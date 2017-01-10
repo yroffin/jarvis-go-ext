@@ -8,6 +8,52 @@
 	},
 	"item": [
 		{
+			"name": "collect",
+			"description": "",
+			"item": [
+				{
+					"name": "localhost:7000/api/collect",
+					"request": {
+						"url": "localhost:7000/api/collect/teleinfo",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"find\":{\n\t\t\"timestamp\": {\n\t\t\t\"$gt\": {\"RFC3339\": \"2017-01-08T19:48:41+01:00\"},\n\t\t\t\"$lt\": {\"RFC3339\": \"2017-01-08T21:49:41+01:00\"}\n\t\t}\n\t},\n\t\"orderby\": [\"base\"]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:7000/api/collect copy",
+					"request": {
+						"url": "localhost:7000/api/collect",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"find\":{\n\t\t\"timestamp\": {\n\t\t\t\"$gt\": {\"RFC3339\": \"2017-01-08T21:48:41+01:00\"}\n\t\t}\n\t}\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "dio",
 			"description": "",
 			"item": [
@@ -60,7 +106,7 @@
 				{
 					"name": "http://192.168.1.12:8082/api/zway/devices",
 					"request": {
-						"url": "http://localhost:7000/api/zway/devices",
+						"url": "http://localhost:7000/api/razberry/ZWayVDev_zway_7-0-49-1",
 						"method": "GET",
 						"header": [],
 						"body": {},

@@ -24,6 +24,7 @@ import (
 type PostCollectResource struct {
 	Find    bson.M   `json:"find,omitempty"`
 	OrderBy []string `json:"orderby,omitempty"`
+	Pipes   []bson.M `json:"pipes,omitempty"`
 }
 
 // GetCollectResource query

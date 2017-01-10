@@ -87,6 +87,32 @@ func parse(field map[string]interface{}, key string, value interface{}) error {
 
 // Post all collection elements
 func Post(c echo.Context) error {
+	if c.QueryParam("operation") == "find" {
+		return find(c)
+	}
+	if c.QueryParam("operation") == "pipe" {
+		return pipeOperation(c)
+	}
+	return nil
+}
+
+// aggregate all collection elements
+func pipeOperation(c echo.Context) error {
+	var m *types.PostCollectResource
+	c.Bind(&m)
+
+	var data, err = pipe(c.Param("id"), m.Pipes)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	// X-Total-Count
+	c.Response().Header().Set("X-Total-Count", strconv.Itoa(len(data)))
+	return c.JSON(http.StatusOK, data)
+}
+
+// find all collection elements
+func find(c echo.Context) error {
 	var m *types.PostCollectResource
 	c.Bind(&m)
 
@@ -198,5 +224,13 @@ func getAndSort(name string, m bson.M, sort []string) ([]bson.M, error) {
 	// retrieve all collections stored in "collect" database
 	tuples := []bson.M{}
 	mongodb_service.Service().GetCollection("collect", name).Find(m).Sort(sort[0]).All(&tuples)
+	return tuples, nil
+}
+
+// pipe aggragate functionor map reduce
+func pipe(name string, m []bson.M) ([]bson.M, error) {
+	// retrieve all collections stored in "collect" database
+	tuples := []bson.M{}
+	mongodb_service.Service().GetCollection("collect", name).Pipe(m).All(&tuples)
 	return tuples, nil
 }
