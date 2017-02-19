@@ -25,8 +25,9 @@ For teleinfo option change right to 755 on USB file (ex: /dev/ttyUSB0) and apply
 
 ## Setup on raspberry pi 2 or zero
 
-    pi@raspberrypi:~ $ sudo useradd -m -b /home/jarvis jarvis
-    pi@raspberrypi:~ $ export GITHUB=https://github.com/yroffin/jarvis-go-ext/releases/download/1.01b6
+    pi@raspberrypi:~ $ sudo userdel -r jarvis
+    pi@raspberrypi:~ $ sudo useradd -m jarvis
+    pi@raspberrypi:~ $ export GITHUB=https://github.com/yroffin/jarvis-go-ext/releases/download/1.03a
     pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-rest-module-0.0.1-SNAPSHOT.armel -O /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
     or
     pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-rest-module-0.0.1-SNAPSHOT.armhf -O /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
