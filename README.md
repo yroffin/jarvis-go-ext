@@ -50,8 +50,13 @@ For teleinfo option change right to 755 on USB file (ex: /dev/ttyUSB0) and apply
 
 # Components
 
+## Teleinfo
+
+Teleinfo integration with GBEE component
+- https://www.domotique-store.fr/177-mesure-de-consommation-via-teleinfo-edf
+
 ## HUE
-------
+
 TODO
 
 ## DIO
