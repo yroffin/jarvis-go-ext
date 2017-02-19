@@ -15,6 +15,8 @@ Setup mongodb for store local data
 
 Connector is based on wiringPi so setup wiringPi on your host [here](http://wiringpi.com)
 
+        sudo apt-get install wiringpi
+
 ## Teleinfo option
 
 For teleinfo option change right to 755 on USB file (ex: /dev/ttyUSB0) and apply this command in /etc/rc.local
