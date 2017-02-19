@@ -25,19 +25,26 @@ For teleinfo option change right to 755 on USB file (ex: /dev/ttyUSB0) and apply
 
 ## Setup on raspberry pi 2 or zero
 
-    pi@raspberrypi:~ $ sudo userdel -r jarvis
-    pi@raspberrypi:~ $ sudo useradd -m jarvis
-    pi@raspberrypi:~ $ export GITHUB=https://github.com/yroffin/jarvis-go-ext/releases/download/1.03a
-    pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-rest-module-0.0.1-SNAPSHOT.armel -O /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
-    or
-    pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-rest-module-0.0.1-SNAPSHOT.armhf -O /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
-    pi@raspberrypi:~ $ sudo chmod 755 /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
-    pi@raspberrypi:~ $ sudo chown jarvis:jarvis /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
-    pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-go-service -O /etc/init.d/jarvis-go-service
-    pi@raspberrypi:~ $ sudo chmod 755 /etc/init.d/jarvis-go-service
-    pi@raspberrypi:~ $ sudo update-rc.d jarvis-go-service defaults
-    pi@raspberrypi:~ $ sudo service jarvis-go-service restart
-    pi@raspberrypi:~ $ curl http://192.168.1.47:7000/api/teleinfo
+        pi@raspberrypi:~ $ sudo userdel -r jarvis
+        pi@raspberrypi:~ $ sudo useradd -m jarvis
+        pi@raspberrypi:~ $ export GITHUB=https://github.com/yroffin/jarvis-go-ext/releases/download/1.03a
+        pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-rest-module-0.0.1-SNAPSHOT.armel -O /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
+        or
+        pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-rest-module-0.0.1-SNAPSHOT.armhf -O /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
+        pi@raspberrypi:~ $ sudo chmod 755 /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
+        pi@raspberrypi:~ $ sudo chown jarvis:jarvis /home/jarvis/jarvis-rest-module-0.0.1-SNAPSHOT.arm
+        pi@raspberrypi:~ $ sudo wget ${GITHUB}/jarvis-go-service -O /etc/init.d/jarvis-go-service
+        pi@raspberrypi:~ $ sudo chmod 755 /etc/init.d/jarvis-go-service
+        pi@raspberrypi:~ $ sudo update-rc.d jarvis-go-service defaults
+        pi@raspberrypi:~ $ sudo service jarvis-go-service restart
+        pi@raspberrypi:~ $ curl http://192.168.1.47:7000/api/teleinfo
+
+## /etc/rc.local sample
+
+        # setup jarvis
+        stty 1200 cs7 evenp cstopb -igncr -inlcr -brkint -icrnl -opost -isig -icanon -iexten -F /dev/ttyUSB0
+        service mongodb restart
+        service jarvis-go-service restart
 
 # Roadmap
 
