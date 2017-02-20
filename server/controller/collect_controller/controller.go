@@ -19,6 +19,7 @@ package collect_controller
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -227,10 +228,56 @@ func getAndSort(name string, m bson.M, sort []string) ([]bson.M, error) {
 	return tuples, nil
 }
 
-// pipe aggragate functionor map reduce
+// dump this map
+func apply(m []bson.M) {
+	for k, v := range m {
+		// Wrap the original in a reflect.Value
+		translateRecursive(0, m, k, v)
+	}
+}
+
+// translateRecursive apply IISODate conversion
+func translateRecursive(level int, holder interface{}, key interface{}, value interface{}) {
+	switch value.(type) {
+	case string:
+		// convert strig when type conversion is needed
+		if strings.HasPrefix(value.(string), "ISODate(") {
+
+			extract := strings.Replace(value.(string), "ISODate(", "", 1)
+			extractFinal := strings.Replace(extract, ")", "", 1)
+
+			dateFormat, err := time.Parse(time.RFC3339, extractFinal)
+			if err != nil {
+				logrus.WithFields(logrus.Fields{
+					"err": err.Error(),
+				}).Error("collect")
+			} else {
+				map[string]interface{}(holder.(map[string]interface{}))[string(key.(string))] = dateFormat
+			}
+		}
+		break
+	case bson.M:
+		for k, v := range value.(bson.M) {
+			// Wrap bson.M
+			translateRecursive(level+1, value, k, v)
+		}
+		break
+	case map[string]interface{}:
+		for k, v := range value.(map[string]interface{}) {
+			// Wrap map[string]interface{}
+			translateRecursive(level+1, value, k, v)
+		}
+		break
+	default:
+	}
+}
+
+// pipe aggregate functionor map reduce
 func pipe(name string, m []bson.M) ([]bson.M, error) {
-	// retrieve all collections stored in "collect" database
+	// apply pipes on collections stored in "collect" database
 	tuples := []bson.M{}
+	// transform data
+	apply(m)
 	mongodb_service.Service().GetCollection("collect", name).Pipe(m).All(&tuples)
 	return tuples, nil
 }
