@@ -87,9 +87,7 @@ func handleReadFile(device string) error {
 		}
 		// sleep while no bytes
 		// to avoid system flood read
-		if len(buf) <= 0 {
-			time.Sleep(1000 * time.Millisecond)
-		}
+		time.Sleep(1000 * time.Millisecond)
 	}
 
 	log.Default.Info("teleinfo", log.Fields{
