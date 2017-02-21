@@ -67,7 +67,7 @@ func handleReadFile(device string) error {
 		"device": device,
 	})
 
-	s, err := os.OpenFile(device, syscall.O_RDONLY|syscall.O_NOCTTY, 0666)
+	s, err := os.OpenFile(device, syscall.O_RDONLY, 0666)
 
 	if err != nil {
 		log.Default.Error("teleinfo", log.Fields{
