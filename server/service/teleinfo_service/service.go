@@ -20,6 +20,7 @@ import (
 	"os"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/spf13/viper"
 	log "github.com/yroffin/jarvis-go-ext/logger"
@@ -78,6 +79,11 @@ func handleReadFile(device string) error {
 		}
 		for i := 0; i < len; i++ {
 			canal <- buf[i]
+		}
+		// sleep while no bytes
+		// to avoid system flood read operation
+		if len <= 0 {
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}
 
