@@ -17,6 +17,7 @@
 package teleinfo_service
 
 import (
+	"bufio"
 	"os"
 	"sync"
 	"syscall"
@@ -62,6 +63,10 @@ var canal = make(chan byte, 5)
 // handleReadFile : read file
 func handleReadFile(device string) error {
 
+	log.Default.Info("teleinfo", log.Fields{
+		"device": device,
+	})
+
 	s, err := os.OpenFile(device, syscall.O_RDONLY|syscall.O_NOCTTY, 0666)
 
 	if err != nil {
@@ -70,19 +75,19 @@ func handleReadFile(device string) error {
 		})
 	}
 
+	reader := bufio.NewReader(s)
+
 	// Receive reply
 	for {
-		buf := make([]byte, 128)
-		var len, err = s.Read(buf)
+		buf, err := reader.ReadBytes(0x0d)
 		if err != nil { // err will equal io.EOF
-			break
 		}
-		for i := 0; i < len; i++ {
+		for i := 0; i < len(buf); i++ {
 			canal <- buf[i]
 		}
 		// sleep while no bytes
-		// to avoid system flood read operation
-		if len <= 0 {
+		// to avoid system flood read
+		if len(buf) <= 0 {
 			time.Sleep(1000 * time.Millisecond)
 		}
 	}

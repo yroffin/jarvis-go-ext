@@ -64,6 +64,10 @@ func Start() {
 		log.Default.Info("teleinfo", log.Fields{
 			"active": "true",
 		})
+	} else {
+		log.Default.Info("teleinfo", log.Fields{
+			"active": "false",
+		})
 	}
 
 	// setup razberry
@@ -72,6 +76,10 @@ func Start() {
 		razberry_service.Service()
 		log.Default.Info("razberry", log.Fields{
 			"active": "true",
+		})
+	} else {
+		log.Default.Info("razberry", log.Fields{
+			"active": "false",
 		})
 	}
 
