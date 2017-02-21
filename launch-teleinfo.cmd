@@ -1,1 +1,1 @@
-jarvis-go-ext.exe start --jarvis.option.teleinfo.file dummy.txt --jarvis.option.teleinfo.active true --jarvis.option.teleinfo.cron "@every 1s" --jarvis.option.teleinfo true --jarvis.option.mongodb 192.168.1.47
+jarvis-go-ext.exe start --jarvis.option.teleinfo.file dummy.txt --jarvis.option.teleinfo.active true --jarvis.option.teleinfo.cron "@every 1s" --jarvis.option.teleinfo true --jarvis.option.mongodb 127.0.0.1
