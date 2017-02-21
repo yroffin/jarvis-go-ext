@@ -58,7 +58,7 @@ func Service() *TeleinfoService {
 }
 
 // declare canal
-var canal = make(chan byte, 5)
+var canal = make(chan byte, 1024)
 
 // handleReadFile : read file
 func handleReadFile(device string) error {
