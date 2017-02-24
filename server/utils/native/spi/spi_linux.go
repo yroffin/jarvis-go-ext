@@ -129,7 +129,7 @@ func NewSPIDevice(bus int, chipSelect int) *SPIDevice {
 func (spi *SPIDevice) Open() error {
 	spiDevice := fmt.Sprintf("%s%d.%d", SPIDEV, spi.Bus, spi.Chip)
 
-	logger.Default.Info("spi.Open", log.Fields{
+	logger.Default.Info("spi.Open", logger.Fields{
 		"device": spiDevice,
 	})
 
