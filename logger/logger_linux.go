@@ -36,6 +36,6 @@ func (that *LoggerTools) initSyslog() {
 
 // Log info
 func (that *LoggerTools) InfoSyslog(m string) error {
-	_, err := syslog_writer.Info(m)
-	return err
+	syslog_writer.Info(m)
+	return nil
 }
