@@ -30,7 +30,7 @@ import "C"
 import (
 	"sync"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/yroffin/jarvis-go-ext/logger"
 )
 
 // WiringPiDriver : wiring pi instance
@@ -52,9 +52,9 @@ func GetInstance() *WiringPiDriver {
 // WiringPiInit : initialize the library
 func (wiringPi *WiringPiDriver) init() int {
 	var res = int(C.wiringPiSetupInit())
-	logrus.WithFields(logrus.Fields{
+	logger.Default.Info("WiringPiDriver", logger.Fields{
 		"Init": "on",
-	}).Info("WiringPiDriver")
+	})
 	return res
 }
 

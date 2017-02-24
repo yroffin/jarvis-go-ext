@@ -1,14 +1,14 @@
 package ioctl
 
-import log "github.com/Sirupsen/logrus"
+import "github.com/yroffin/jarvis-go-ext/logger"
 
 // IOCTL : ioctl wrapper
 func IOCTL(fd, op, arg uintptr) error {
-	logrus.WithFields(log.Fields{
+	logger.Default.Info("Ioctl [SIMULATED]", log.Fields{
 		"fd":  fd,
 		"op":  op,
 		"arg": arg,
-	}).Info("Ioctl [SIMULATED]")
+	})
 
 	return nil
 }

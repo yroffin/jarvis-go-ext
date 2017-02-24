@@ -23,8 +23,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
-
 	"strings"
 
 	"github.com/parnurzeal/gorequest"
@@ -170,9 +168,9 @@ func (that *CronService) init() {
 		c := cron.New()
 		c.AddJob(viper.GetString("jarvis.option.advertise.cron"), job)
 		c.Start()
-		logrus.WithFields(logrus.Fields{
+		logger.Default.Info("advertise", logger.Fields{
 			"cron": viper.GetString("jarvis.option.advertise.cron"),
-		}).Info("advertise")
+		})
 	}
 
 	// teleinfo
@@ -191,9 +189,9 @@ func (that *CronService) init() {
 		c := cron.New()
 		c.AddJob(viper.GetString("jarvis.option.teleinfo.cron"), job)
 		c.Start()
-		logrus.WithFields(logrus.Fields{
-			"cron": viper.GetString("jarvis.option.teleinfo.cron"),
-		}).Info("teleinfo")
+		logger.Default.Info("teleinfo", logger.Fields{
+			"cron": viper.GetString("jarvis.option.advertise.cron"),
+		})
 	}
 
 	// teleinfo
@@ -213,8 +211,8 @@ func (that *CronService) init() {
 		c := cron.New()
 		c.AddJob(viper.GetString("jarvis.option.razberry.cron"), job)
 		c.Start()
-		logrus.WithFields(logrus.Fields{
-			"cron": viper.GetString("jarvis.option.razberry.cron"),
-		}).Info("razberry")
+		logger.Default.Info("razberry", logger.Fields{
+			"cron": viper.GetString("jarvis.option.advertise.cron"),
+		})
 	}
 }

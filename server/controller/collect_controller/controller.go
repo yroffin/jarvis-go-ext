@@ -24,8 +24,8 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
+	"github.com/yroffin/jarvis-go-ext/logger"
 	"github.com/yroffin/jarvis-go-ext/server/service/mongodb_service"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 )
@@ -75,9 +75,7 @@ func parse(field map[string]interface{}, key string, value interface{}) error {
 				decoded, err = time.Parse(time.RFC3339, valueToDecode.(string))
 			}
 			if err != nil {
-				logrus.WithFields(logrus.Fields{
-					"err": err.Error(),
-				}).Error("collect")
+				logger.Default.Error("collect", logger.Fields{"err": err.Error()})
 				return err
 			}
 			field[key] = decoded
@@ -248,9 +246,7 @@ func translateRecursive(level int, holder interface{}, key interface{}, value in
 
 			dateFormat, err := time.Parse(time.RFC3339, extractFinal)
 			if err != nil {
-				logrus.WithFields(logrus.Fields{
-					"err": err.Error(),
-				}).Error("collect")
+				logger.Default.Error("collect", logger.Fields{"err": err.Error()})
 			} else {
 				map[string]interface{}(holder.(map[string]interface{}))[string(key.(string))] = dateFormat
 			}

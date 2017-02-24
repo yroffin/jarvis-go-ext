@@ -17,6 +17,7 @@
 package logger
 
 import (
+	"encoding/json"
 	"strconv"
 	"sync"
 	"time"
@@ -87,6 +88,14 @@ func GetInstance() *LoggerTools {
 }
 
 // Info : log info data
+func (that *LoggerTools) InfoLog(category string, fields Fields) {
+	fields["category"] = category
+	fields["timestamp"] = time.Now()
+	jsonString, _ := json.Marshal(fields)
+	that.InfoSyslog(string(jsonString))
+}
+
+// Info : log info data
 func (that *LoggerTools) Info(category string, fields Fields) {
 	mutex.Lock()
 	// add collection to map il not exist
@@ -95,6 +104,19 @@ func (that *LoggerTools) Info(category string, fields Fields) {
 	}
 	mutex.Unlock()
 	fields["Level"] = "INFO"
+	that.collections[category].Insert(&LogResource{Fields: fields, Timestamp: time.Now()})
+	that.InfoLog(category, fields)
+}
+
+// Debug : log error data
+func (that *LoggerTools) Debug(category string, fields Fields) {
+	mutex.Lock()
+	// add collection to map il not exist
+	if _, ok := that.collections[category]; !ok {
+		that.collections[category] = that.mgo.GetCollection("logger", category)
+	}
+	mutex.Unlock()
+	fields["Level"] = "DEBUG"
 	that.collections[category].Insert(&LogResource{Fields: fields, Timestamp: time.Now()})
 }
 
@@ -110,8 +132,21 @@ func (that *LoggerTools) Error(category string, fields Fields) {
 	that.collections[category].Insert(&LogResource{Fields: fields, Timestamp: time.Now()})
 }
 
+// Warn : log error data
+func (that *LoggerTools) Warn(category string, fields Fields) {
+	mutex.Lock()
+	// add collection to map il not exist
+	if _, ok := that.collections[category]; !ok {
+		that.collections[category] = that.mgo.GetCollection("logger", category)
+	}
+	mutex.Unlock()
+	fields["Level"] = "WARN"
+	that.collections[category].Insert(&LogResource{Fields: fields, Timestamp: time.Now()})
+}
+
 // Init : Init
 func (that *LoggerTools) init() {
 	that.mgo = mongodb_service.Service()
 	that.collections = make(map[string]*mgo.Collection)
+	that.initSyslog()
 }

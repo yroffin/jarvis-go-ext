@@ -19,7 +19,6 @@ package dio_controller
 import (
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/yroffin/jarvis-go-ext/logger"
 	"github.com/yroffin/jarvis-go-ext/server/types"
@@ -31,10 +30,8 @@ func Post(c echo.Context) error {
 	var m *types.DioResource
 	c.Bind(&m)
 
-	logrus.WithFields(logrus.Fields{
-		"c":    c,
-		"bind": m,
-	}).Info("dio")
+	logger.Default.Info("dio", logger.Fields{"c": c,
+		"bind": m})
 
 	logger.Default.Info("dio", logger.Fields{
 		"pin":         m.Pin,

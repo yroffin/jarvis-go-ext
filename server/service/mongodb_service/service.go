@@ -17,9 +17,9 @@
 package mongodb_service
 
 import (
+	"fmt"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
 	mgo "gopkg.in/mgo.v2"
 )
@@ -60,10 +60,7 @@ func (MongoService *MongoService) StoreData(db string, col string, data interfac
 func (MongoService *MongoService) Store(col *mgo.Collection, data interface{}) interface{} {
 	var err = col.Insert(&data)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"data":  data,
-			"error": err,
-		}).Error("MongoService")
+		fmt.Printf("[ERROR] while backup data %s/%s\n", data, err)
 	}
 	return data
 }
@@ -77,9 +74,7 @@ func (MongoService *MongoService) Close() {
 func (MongoService *MongoService) init() {
 	var host = viper.GetString("jarvis.option.mongodb")
 
-	logrus.WithFields(logrus.Fields{
-		"host": host,
-	}).Info("MongoService")
+	fmt.Printf("[INFO] init mongodb %s\n", host)
 
 	// get mongo session
 	session, err := mgo.Dial(host)
@@ -90,9 +85,5 @@ func (MongoService *MongoService) init() {
 
 	var info, _ = session.BuildInfo()
 
-	logrus.WithFields(logrus.Fields{
-		"host":    host,
-		"version": info.Version,
-		"sys":     info.SysInfo,
-	}).Info("MongoService")
+	fmt.Printf("[INFO] init mongodb %s/%s/%s\n", host, info.Version, info.SysInfo)
 }

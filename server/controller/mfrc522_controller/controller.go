@@ -19,34 +19,34 @@ package mfrc522_controller
 import (
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
+	"github.com/yroffin/jarvis-go-ext/logger"
 	"github.com/yroffin/jarvis-go-ext/server/types"
 	"github.com/yroffin/jarvis-go-ext/server/utils/native/mfrc522"
 )
 
-// HandlePost : handler for post
+// Post : handler for post
 func Post(c echo.Context) error {
 	var m *types.Mfrc522Resource
 	c.Bind(&m)
 
-	logrus.WithFields(logrus.Fields{
+	logger.Default.Info("mfrc522/post", logger.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
-	}).Info("mfrc522")
+	})
 
 	return c.JSON(http.StatusOK, m)
 }
 
-// HandlePostMfrc522DumpClassic1K : handler for post
+// PostDumpClassic1K : handler for post
 func PostDumpClassic1K(c echo.Context) error {
 	var m *types.Mfrc522DumpResource
 	c.Bind(&m)
 
-	logrus.WithFields(logrus.Fields{
+	logger.Default.Info("mfrc522/dump", logger.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
-	}).Info("mfrc522/dump")
+	})
 
 	// get native service (low level)
 	var instance = mfrc522.GetInstance()
@@ -54,9 +54,10 @@ func PostDumpClassic1K(c echo.Context) error {
 	// dump nfc tag
 	var result, tagType, data, _ = instance.DumpClassic1K(m.Key[0:len(m.Key)])
 	if result != nil {
-		logrus.WithFields(logrus.Fields{
+		logger.Default.Error("mfrc522/dump", logger.Fields{
 			"status": result,
-		}).Error("Unable to detect tag")
+			"error":  "Unable to detect tag",
+		})
 	}
 
 	// fill result
@@ -74,40 +75,41 @@ func PostDumpClassic1K(c echo.Context) error {
 	return c.JSON(http.StatusOK, m)
 }
 
-// HandlePostMfrc522WriteClassic1K : handler for post
+// PostWriteClassic1K : handler for post
 func PostWriteClassic1K(c echo.Context) error {
 	var m *types.Mfrc522WriteResource
 	c.Bind(&m)
 
-	logrus.WithFields(logrus.Fields{
+	logger.Default.Info("mfrc522/write", logger.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
-	}).Info("mfrc522/dump")
+	})
 
 	return c.JSON(http.StatusOK, m)
 }
 
-// HandlePostMfrc522Request : handler for post
+// PostRequest : handler for post
 func PostRequest(c echo.Context) error {
 	var m *types.Mfrc522DumpResource
 	c.Bind(&m)
 
-	logrus.WithFields(logrus.Fields{
+	logger.Default.Info("mfrc522/request", logger.Fields{
 		"key": m.Key,
-	}).Info("HandlePostMfrc522Request")
+		"uid": m.Uid,
+	})
 
 	return c.JSON(http.StatusOK, m)
 }
 
-// HandlePostMfrc522AntiColl : handler for post
+// PostAntiColl : handler for post
 func PostAntiColl(c echo.Context) error {
 	var m *types.Mfrc522Resource
 	c.Bind(&m)
 
-	logrus.WithFields(logrus.Fields{
+	logger.Default.Info("mfrc522/anticoll", logger.Fields{
 		"key": m.Key,
 		"uid": m.Uid,
-	}).Info("HandlePostMfrc522AntiColl")
+	})
 
 	return c.JSON(http.StatusOK, m)
 }

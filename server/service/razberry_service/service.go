@@ -25,10 +25,9 @@ import (
 
 	"encoding/json"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/parnurzeal/gorequest"
 	"github.com/spf13/viper"
-	log "github.com/yroffin/jarvis-go-ext/logger"
+	"github.com/yroffin/jarvis-go-ext/logger"
 )
 
 // RazberryService service descriptor
@@ -65,9 +64,9 @@ func (that *RazberryService) DeviceById(id string) (map[string]interface{}, erro
 // Get
 func (that *RazberryService) get(uri string) (map[string]interface{}, error) {
 
-	logrus.WithFields(logrus.Fields{
+	logger.Default.Debug("razberryService", logger.Fields{
 		"uri": that.Url + uri,
-	}).Debug("razberryService")
+	})
 
 	request := gorequest.New().Timeout(2 * time.Second)
 
@@ -78,25 +77,18 @@ func (that *RazberryService) get(uri string) (map[string]interface{}, error) {
 
 	// check for errors
 	if errs != nil {
-		log.Default.Error("razberry", log.Fields{
+		logger.Default.Error("razberry", logger.Fields{
 			"errors": errs,
 		})
-		logrus.WithFields(logrus.Fields{
-			"errors": errs,
-		}).Error("razberry")
 		return nil, errors.New("http: while trying to connect")
 	}
 
 	// check for errors
 	if b, err := ioutil.ReadAll(resp.Body); err != nil || resp.StatusCode != 200 {
-		log.Default.Error("razberry", log.Fields{
+		logger.Default.Error("razberry", logger.Fields{
 			"body":   string(b),
 			"status": resp.Status,
 		})
-		logrus.WithFields(logrus.Fields{
-			"body":   string(b),
-			"status": resp.Status,
-		}).Error("razberry")
 		return nil, errors.New("http: while decoding body")
 	} else {
 		var body map[string]interface{}
@@ -111,5 +103,7 @@ func (that *RazberryService) init() {
 	that.Auth = viper.GetString("jarvis.option.razberry.auth")
 
 	// log information
-	log.Default.Info("razberry", log.Fields{})
+	logger.Default.Info("razberry", logger.Fields{
+		"url": that.Url,
+	})
 }
