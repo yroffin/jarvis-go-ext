@@ -21,7 +21,7 @@ import (
 	syslog "log/syslog"
 )
 
-var syslog_writer *Writer
+var syslog_writer *syslog.Writer
 
 // Init : Init
 func (that *LoggerTools) initSyslog() {
