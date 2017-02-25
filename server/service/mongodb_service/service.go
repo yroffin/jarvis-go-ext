@@ -32,7 +32,7 @@ type MongoService struct {
 var instance *MongoService
 var once sync.Once
 
-// GetInstance : singleton instance
+// Service : singleton instance
 func Service() *MongoService {
 	once.Do(func() {
 		instance = new(MongoService)
@@ -41,17 +41,21 @@ func Service() *MongoService {
 	return instance
 }
 
-// get collections
+// GetCollections : get collections
 func (MongoService *MongoService) GetCollections(db string) ([]string, error) {
+	// refresh session if needed
+	MongoService.session.Refresh()
 	return MongoService.session.DB(db).CollectionNames()
 }
 
-// get collection
+// GetCollection : get collection
 func (MongoService *MongoService) GetCollection(db string, col string) *mgo.Collection {
+	// refresh session if needed
+	MongoService.session.Refresh()
 	return MongoService.session.DB(db).C(col)
 }
 
-// store element
+// StoreData : store element
 func (MongoService *MongoService) StoreData(db string, col string, data interface{}) interface{} {
 	return MongoService.Store(MongoService.GetCollection(db, col), data)
 }
