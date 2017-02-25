@@ -214,7 +214,11 @@ func findAll() ([]types.GetCollectResourceDetail, error) {
 func get(name string, m bson.M) ([]bson.M, error) {
 	// retrieve all collections stored in "collect" database
 	tuples := []bson.M{}
-	mongodb_service.Service().GetCollection("collect", name).Find(m).All(&tuples)
+	err := mongodb_service.Service().GetCollection("collect", name).Find(m).All(&tuples)
+	if err != nil {
+		logger.Default.Error("collect/get", logger.Fields{"err": err})
+		return tuples, err
+	}
 	return tuples, nil
 }
 
@@ -222,7 +226,11 @@ func get(name string, m bson.M) ([]bson.M, error) {
 func getAndSort(name string, m bson.M, sort []string) ([]bson.M, error) {
 	// retrieve all collections stored in "collect" database
 	tuples := []bson.M{}
-	mongodb_service.Service().GetCollection("collect", name).Find(m).Sort(sort[0]).All(&tuples)
+	err := mongodb_service.Service().GetCollection("collect", name).Find(m).Sort(sort[0]).All(&tuples)
+	if err != nil {
+		logger.Default.Error("collect/get/sort", logger.Fields{"err": err})
+		return tuples, err
+	}
 	return tuples, nil
 }
 
@@ -274,6 +282,10 @@ func pipe(name string, m []bson.M) ([]bson.M, error) {
 	tuples := []bson.M{}
 	// transform data
 	apply(m)
-	mongodb_service.Service().GetCollection("collect", name).Pipe(m).All(&tuples)
+	err := mongodb_service.Service().GetCollection("collect", name).Pipe(m).All(&tuples)
+	if err != nil {
+		logger.Default.Error("collect/pipe", logger.Fields{"err": err})
+		return tuples, err
+	}
 	return tuples, nil
 }
