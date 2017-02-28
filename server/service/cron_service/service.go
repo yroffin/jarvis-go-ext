@@ -115,7 +115,13 @@ func (job *CollectTeleinfoJob) Run() {
 	 */
 	var base, err = strconv.Atoi(job.teleinfo.Get("BASE"))
 	if err == nil {
-		job.col.Insert(&CollectTeleinfoResource{Base: base, Timestamp: time.Now()})
+		err := job.mgo.Insert(job.col, &CollectTeleinfoResource{Base: base, Timestamp: time.Now()})
+		if err != nil {
+			logger.Default.Error("teleinfo", logger.Fields{
+				"data": &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
+				"":     err,
+			})
+		}
 	} else {
 		logger.Default.Error("teleinfo", logger.Fields{
 			"data": &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
@@ -147,7 +153,13 @@ func (job *CollectRazberryJob) Run() {
 	for index := 0; index < len(job.devices); index++ {
 		var dev, err = job.razberry.DeviceById(job.devices[index])
 		if err == nil {
-			job.col.Insert(&CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()})
+			job.mgo.Insert(job.col, &CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()})
+			if err != nil {
+				logger.Default.Error("razberry", logger.Fields{
+					"data": &CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()},
+					"":     err,
+				})
+			}
 		} else {
 			logger.Default.Error("razberry", logger.Fields{
 				"data": &CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()},

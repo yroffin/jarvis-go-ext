@@ -41,6 +41,21 @@ func Service() *MongoService {
 	return instance
 }
 
+// Insert : get collections
+func (MongoService *MongoService) Insert(col *mgo.Collection, docs ...interface{}) error {
+	var err error
+	err = nil
+	// try one insert
+	err = col.Insert(docs)
+	if err != nil {
+		// refresh session if needed
+		MongoService.session.Refresh()
+		// retry another time
+		err = col.Insert(docs)
+	}
+	return err
+}
+
 // GetCollections : get collections
 func (MongoService *MongoService) GetCollections(db string) ([]string, error) {
 	// refresh session if needed
