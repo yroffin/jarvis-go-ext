@@ -42,7 +42,7 @@ func Service() *MongoService {
 }
 
 // Insert : get collections
-func (MongoService *MongoService) Insert(col *mgo.Collection, docs ...interface{}) error {
+func (MongoService *MongoService) Insert(col *mgo.Collection, docs interface{}) error {
 	var err error
 	err = nil
 	// try one insert

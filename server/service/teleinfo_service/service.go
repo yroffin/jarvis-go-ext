@@ -63,10 +63,6 @@ var canal = make(chan byte, 1024)
 // handleReadFile : read file
 func handleReadFile(device string) error {
 
-	log.Default.Info("teleinfo", log.Fields{
-		"device": device,
-	})
-
 	s, err := os.OpenFile(device, syscall.O_RDONLY, 0666)
 
 	if err != nil {
@@ -75,19 +71,25 @@ func handleReadFile(device string) error {
 		})
 	}
 
+	log.Default.Info("teleinfo", log.Fields{
+		"device": device,
+	})
+
 	reader := bufio.NewReader(s)
 
 	// Receive reply
 	for {
 		buf, err := reader.ReadBytes(0x0d)
 		if err != nil { // err will equal io.EOF
+			// sleep while no bytes
+			// to avoid system flood read
+			time.Sleep(1000 * time.Millisecond)
+		} else {
+			// dispatch io
+			for i := 0; i < len(buf); i++ {
+				canal <- buf[i]
+			}
 		}
-		for i := 0; i < len(buf); i++ {
-			canal <- buf[i]
-		}
-		// sleep while no bytes
-		// to avoid system flood read
-		time.Sleep(1000 * time.Millisecond)
 	}
 
 	log.Default.Info("teleinfo", log.Fields{
