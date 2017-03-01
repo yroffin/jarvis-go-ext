@@ -97,11 +97,12 @@ func handleReadFile(device string) error {
 			for i := 0; i < len(buffer); i++ {
 				canal <- buffer[i]
 			}
-			fmt.Printf(".")
 			if len(buffer) < 3000 {
-				millis = millis + 1
+				fmt.Printf(">")
+				millis = millis + 10
 			} else {
-				millis = millis - 1
+				fmt.Printf("<")
+				millis = millis - 10
 				if millis == 0 {
 					millis = 0
 				}
