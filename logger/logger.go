@@ -130,6 +130,7 @@ func (that *LoggerTools) Error(category string, fields Fields) {
 	mutex.Unlock()
 	fields["Level"] = "ERROR"
 	that.collections[category].Insert(&LogResource{Fields: fields, Timestamp: time.Now()})
+	that.InfoLog(category, fields)
 }
 
 // Warn : log error data
@@ -142,6 +143,7 @@ func (that *LoggerTools) Warn(category string, fields Fields) {
 	mutex.Unlock()
 	fields["Level"] = "WARN"
 	that.collections[category].Insert(&LogResource{Fields: fields, Timestamp: time.Now()})
+	that.InfoLog(category, fields)
 }
 
 // Init : Init

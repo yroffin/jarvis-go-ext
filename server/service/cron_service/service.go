@@ -118,14 +118,15 @@ func (job *CollectTeleinfoJob) Run() {
 		err := job.mgo.Insert(job.col, &CollectTeleinfoResource{Base: base, Timestamp: time.Now()})
 		if err != nil {
 			logger.Default.Error("teleinfo", logger.Fields{
-				"data": &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
-				"":     err,
+				"data":  &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
+				"Error": err,
 			})
 		}
 	} else {
 		logger.Default.Error("teleinfo", logger.Fields{
-			"data": &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
-			"":     err,
+			"BASE":  job.teleinfo.Get("BASE"),
+			"data":  &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
+			"Error": err,
 		})
 	}
 }
