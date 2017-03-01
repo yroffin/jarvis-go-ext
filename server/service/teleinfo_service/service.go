@@ -18,7 +18,6 @@ package teleinfo_service
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"sync"
 	"syscall"
@@ -78,8 +77,6 @@ func handleReadFile(device string) error {
 
 	buffer := make([]byte, 4096)
 	reader := bufio.NewReader(s)
-	var millis = time.Millisecond
-	millis = 1
 
 	// Receive reply
 	for {
@@ -89,24 +86,13 @@ func handleReadFile(device string) error {
 			log.Default.Error("teleinfo", log.Fields{
 				"Error": err,
 			})
-			fmt.Printf("e")
 			time.Sleep(1000 * time.Millisecond)
 		} else {
 			// dispatch io
 			for i := 0; i < len(buffer); i++ {
 				canal <- buffer[i]
 			}
-			if len(buffer) < 3000 {
-				fmt.Printf(">")
-				millis = millis + 10
-			} else {
-				fmt.Printf("<")
-				millis = millis - 10
-				if millis == 0 {
-					millis = 0
-				}
-			}
-			time.Sleep(millis * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}
 
