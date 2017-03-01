@@ -79,7 +79,8 @@ func handleReadFile(device string) error {
 
 	buffer := make([]byte, 4096)
 	reader := bufio.NewReader(s)
-	var millis Duration = 1
+	var millis = time.Millisecond
+	millis = 1
 
 	// Receive reply
 	for {
