@@ -18,6 +18,7 @@ package teleinfo_service
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"sync"
 	"syscall"
@@ -84,17 +85,13 @@ func handleReadFile(device string) error {
 			// sleep while no bytes
 			// to avoid system flood read
 			time.Sleep(2000 * time.Millisecond)
-			log.Default.Error("teleinfo", log.Fields{
-				"ReadBytes": err,
-			})
+			fmt.Printf("e")
 		} else {
 			// dispatch io
-			log.Default.Info("teleinfo", log.Fields{
-				"dispatch": string(buf),
-			})
 			for i := 0; i < len(buf); i++ {
 				canal <- buf[i]
 			}
+			fmt.Printf(".")
 		}
 	}
 
