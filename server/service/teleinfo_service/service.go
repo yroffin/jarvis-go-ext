@@ -19,7 +19,6 @@ package teleinfo_service
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"sync"
 	"syscall"
@@ -84,7 +83,7 @@ func handleReadFile(device string) error {
 
 	// Receive reply
 	for {
-		if _, err := io.ReadFull(reader, buffer); err != nil {
+		if _, err := reader.Read(buffer); err != nil {
 			// sleep while no bytes
 			// to avoid system flood read
 			log.Default.Error("teleinfo", log.Fields{
