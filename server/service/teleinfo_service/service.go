@@ -19,6 +19,7 @@ package teleinfo_service
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"syscall"
@@ -76,20 +77,23 @@ func handleReadFile(device string) error {
 		"device": device,
 	})
 
+	buffer := make([]byte, 4096)
 	reader := bufio.NewReader(s)
 
 	// Receive reply
 	for {
-		buf, err := reader.ReadBytes(0x0d)
-		if err != nil { // err will equal io.EOF
+		if _, err := io.ReadFull(reader, buffer); err != nil {
 			// sleep while no bytes
 			// to avoid system flood read
-			time.Sleep(2000 * time.Millisecond)
+			log.Default.Error("teleinfo", log.Fields{
+				"Error": err,
+			})
 			fmt.Printf("e")
+			time.Sleep(1000 * time.Millisecond)
 		} else {
 			// dispatch io
-			for i := 0; i < len(buf); i++ {
-				canal <- buf[i]
+			for i := 0; i < len(buffer); i++ {
+				canal <- buffer[i]
 			}
 			fmt.Printf(".")
 		}
