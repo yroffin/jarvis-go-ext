@@ -79,6 +79,7 @@ func handleReadFile(device string) error {
 
 	buffer := make([]byte, 4096)
 	reader := bufio.NewReader(s)
+	var millis Duration = 1
 
 	// Receive reply
 	for {
@@ -96,6 +97,15 @@ func handleReadFile(device string) error {
 				canal <- buffer[i]
 			}
 			fmt.Printf(".")
+			if len(buffer) < 3000 {
+				millis = millis + 1
+			} else {
+				millis = millis - 1
+				if millis == 0 {
+					millis = 0
+				}
+			}
+			time.Sleep(millis * time.Millisecond)
 		}
 	}
 
