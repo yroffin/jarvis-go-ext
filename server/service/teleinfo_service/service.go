@@ -41,7 +41,9 @@ type TeleinfoService struct {
 type TeleinfoTrame struct {
 	etiquette string // ETIQUETTE (4 à 8 caractères)
 	data      string // DATA (1 à 12 caractères)
-	hecksum   string // CHECKSUM (caractère de contrôle : Somme de caractère)
+	checksum  string // CHECKSUM (caractère de contrôle : Somme de caractère)
+	line      string // all bytes
+	sum       int    // CHECKSUM calculé
 }
 
 var instance *TeleinfoService
@@ -128,19 +130,44 @@ func (that *TeleinfoService) handleTrame(trame string) {
 		switch {
 		case trame[i] == 0x20:
 			espace++
+			send.line += string([]byte{trame[i]})
 			continue
 		default:
 			if espace == 0 {
 				send.etiquette += string([]byte{trame[i]})
+				send.line += string([]byte{trame[i]})
 			}
 			if espace == 1 {
 				send.data += string([]byte{trame[i]})
+				send.line += string([]byte{trame[i]})
+			}
+			if espace == 2 {
+				send.checksum += string([]byte{trame[i]})
 			}
 			continue
 		}
 	}
+	send.sum = 0
+	for i := 0; i < len(send.line)-1; i++ {
+		send.sum += int(send.line[i])
+	}
 	// submit new value
-	that.submit(send)
+	// Cf. http://forum.arduino.cc/index.php?topic=300157.0 pour le checksum
+	// send when sum is ok
+	if ((send.sum & 0x3F) + 0x20) == int(send.checksum[0]) {
+		that.submit(send)
+	} else {
+		log.Default.Error("teleinfo", log.Fields{
+			"submit":                send.etiquette,
+			"data":                  send.data,
+			"checksum":              send.checksum,
+			"checksum/int":          int(send.checksum[0]),
+			"line":                  send.line,
+			"checksum/computed":     string((send.sum & 0x3F) + 0x20),
+			"checksum/computed/int": (send.sum & 0x3F) + 0x20,
+			"trame":                 trame,
+		})
+	}
 }
 
 // all trames detection
