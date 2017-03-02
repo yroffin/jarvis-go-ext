@@ -80,7 +80,7 @@ func handleReadFile(device string) error {
 
 	// Receive reply
 	for {
-		if _, err := reader.Read(buffer); err != nil {
+		if len, err := reader.Read(buffer); err != nil {
 			// sleep while no bytes
 			// to avoid system flood read
 			log.Default.Error("teleinfo", log.Fields{
@@ -89,10 +89,10 @@ func handleReadFile(device string) error {
 			time.Sleep(1000 * time.Millisecond)
 		} else {
 			// dispatch io
-			for i := 0; i < len(buffer); i++ {
+			for i := 0; i < len; i++ {
 				canal <- buffer[i]
 			}
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(2000 * time.Millisecond)
 		}
 	}
 
