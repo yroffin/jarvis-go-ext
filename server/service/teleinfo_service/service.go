@@ -154,14 +154,21 @@ func (that *TeleinfoService) handleTrame(trame string) {
 	// submit new value
 	// Cf. http://forum.arduino.cc/index.php?topic=300157.0 pour le checksum
 	// send when sum is ok
-	if ((send.sum & 0x3F) + 0x20) == int(send.checksum[0]) {
+	var iCheck = 0
+	// sometimes checksum is null
+	if len(send.checksum) > 0 {
+		iCheck = int(send.checksum[0])
+	} else {
+		iCheck = 0
+	}
+	if ((send.sum & 0x3F) + 0x20) == iCheck {
 		that.submit(send)
 	} else {
 		log.Default.Error("teleinfo", log.Fields{
 			"submit":                send.etiquette,
 			"data":                  send.data,
 			"checksum":              send.checksum,
-			"checksum/int":          int(send.checksum[0]),
+			"checksum/int":          iCheck,
 			"line":                  send.line,
 			"checksum/computed":     string((send.sum & 0x3F) + 0x20),
 			"checksum/computed/int": (send.sum & 0x3F) + 0x20,
