@@ -169,4 +169,9 @@ func Start() {
 	}
 
 	e.Run(standard.New(intf + ":" + port))
+
+	logger.Default.Warn("module exit", logger.Fields{
+		"interface": intf,
+		"port":      port,
+	})
 }
