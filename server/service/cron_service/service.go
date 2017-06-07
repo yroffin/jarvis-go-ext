@@ -151,7 +151,7 @@ func (job *CollectRazberryJob) Run() {
 					"":     err,
 				})
 			} else {
-				mqtt.PublishData("/collect/teleinfo", data)
+				mqtt.PublishData("/collect/razberry", data)
 			}
 		} else {
 			logger.Default.Error("razberry", logger.Fields{
