@@ -89,8 +89,8 @@ func (MongoService *MongoService) Close() {
 	defer MongoService.session.Close()
 }
 
-// initialize this module
-func (MongoService *MongoService) init() {
+// init initialize this module
+func (that *MongoService) init() {
 	var host = viper.GetString("jarvis.option.mongodb")
 
 	fmt.Printf("[INFO] init mongodb %s\n", host)
@@ -100,7 +100,7 @@ func (MongoService *MongoService) init() {
 	if err != nil {
 		panic(err)
 	}
-	MongoService.session = session
+	that.session = session
 
 	var info, _ = session.BuildInfo()
 

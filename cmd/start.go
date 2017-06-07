@@ -48,6 +48,7 @@ func init() {
 	startFlags.Int("jarvis.module.port", 7000, "set the listening jarvis module port")
 	startFlags.String("jarvis.module.interface", "0.0.0.0", "set the listening jarvis module interface")
 	startFlags.String("jarvis.module.name", "remote-module", "set the listening jarvis module name")
+	startFlags.String("jarvis.mqtt.url", "tcp://192.168.1.12:1883", "set the listening jarvis mqtt server url")
 	startFlags.String("jarvis.server.url", "http://192.168.1.12:8082", "set the listening jarvis server url")
 	startFlags.String("daemon", "false", "set daemon mode")
 	// dio
@@ -97,6 +98,7 @@ func init() {
 	viper.BindPFlag("jarvis.module.port", startFlags.Lookup("jarvis.module.port"))
 	viper.BindPFlag("jarvis.module.name", startFlags.Lookup("jarvis.module.name"))
 	viper.BindPFlag("jarvis.module.interface", startFlags.Lookup("jarvis.module.interface"))
+	viper.BindPFlag("jarvis.mqtt.url", startFlags.Lookup("jarvis.mqtt.url"))
 	viper.BindPFlag("jarvis.server.url", startFlags.Lookup("jarvis.server.url"))
 	viper.BindPFlag("jarvis.option.mongodb", startFlags.Lookup("jarvis.option.mongodb"))
 	viper.BindPFlag("daemon", startFlags.Lookup("daemon"))

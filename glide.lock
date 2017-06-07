@@ -1,5 +1,5 @@
-hash: 841f7ca88fc6227442dfc57a19339e968f1c31bc48b333f66e1857b321474528
-updated: 2017-01-02T23:11:25.8202105+01:00
+hash: d96c7345faf5105bb0e74152917905334b6e057ceb47bf85e8da66495afeed33
+updated: 2017-06-06T23:53:53.7395298+02:00
 imports:
 - name: github.com/armon/consul-api
   version: dcfedd50ed5334f96adee43fc88518a4f095e15c
@@ -13,6 +13,10 @@ imports:
   - md2man
 - name: github.com/dgrijalva/jwt-go
   version: 24c63f56522a87ec5339cc3567883f1039378fdb
+- name: github.com/eclipse/paho.mqtt.golang
+  version: d06cc70ac43d625e602946b5ff2346ddebb768e4
+  subpackages:
+  - golang.org/x/net/websocket
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/hashicorp/hcl

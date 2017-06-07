@@ -17,19 +17,17 @@
 package cron_service
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"strconv"
 	"sync"
 	"time"
 
 	"strings"
 
-	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron"
 	"github.com/spf13/viper"
 	"github.com/yroffin/jarvis-go-ext/logger"
 	"github.com/yroffin/jarvis-go-ext/server/service/mongodb_service"
+	"github.com/yroffin/jarvis-go-ext/server/service/mqtt_service"
 	"github.com/yroffin/jarvis-go-ext/server/service/razberry_service"
 	"github.com/yroffin/jarvis-go-ext/server/service/teleinfo_service"
 	"github.com/yroffin/jarvis-go-ext/server/types"
@@ -59,6 +57,8 @@ type AdvertiseJob struct {
 
 // Run
 func (job *AdvertiseJob) Run() {
+	// get mqtt client
+	var mqtt = mqtt_service.Service()
 
 	// define default value for this connector
 	m := &types.Connector{
@@ -70,29 +70,9 @@ func (job *AdvertiseJob) Run() {
 		CanAnswer:  false,
 	}
 
-	mJSON, _ := json.Marshal(m)
-
-	request := gorequest.New().Timeout(2 * time.Second)
-	resp, _, errs := request.
-		Post(viper.GetString("jarvis.server.url") + "/api/connectors/*?task=register").
-		Send(string(mJSON)).
-		End()
-
-	// check for s
-	if errs != nil {
-		logger.Default.Error("cron", logger.Fields{
-			"s": errs,
-		})
-		return
-	}
-
-	// check for s
-	if b, err := ioutil.ReadAll(resp.Body); err != nil {
-		logger.Default.Error("cron", logger.Fields{
-			"body":   string(b),
-			"status": resp.Status,
-		})
-	}
+	// publish on mqtt
+	var name = viper.GetString("jarvis.module.name")
+	mqtt.PublishData("/api/connectors/"+name, m)
 }
 
 // CollectTeleinfoJob collect job
@@ -110,17 +90,23 @@ type CollectTeleinfoResource struct {
 
 // Run the job CollectTeleinfoJob
 func (job *CollectTeleinfoJob) Run() {
+	// get mqtt client
+	var mqtt = mqtt_service.Service()
+
 	/**
 	 * store data
 	 */
 	var base, err = strconv.Atoi(job.teleinfo.Get("BASE"))
 	if err == nil {
-		err := job.mgo.Insert(job.col, &CollectTeleinfoResource{Base: base, Timestamp: time.Now()})
+		var data = CollectTeleinfoResource{Base: base, Timestamp: time.Now()}
+		err := job.mgo.Insert(job.col, &data)
 		if err != nil {
 			logger.Default.Error("teleinfo", logger.Fields{
 				"data":  &CollectTeleinfoResource{Base: base, Timestamp: time.Now()},
 				"Error": err,
 			})
+		} else {
+			mqtt.PublishData("/collect/teleinfo", data)
 		}
 	} else {
 		logger.Default.Error("teleinfo", logger.Fields{
@@ -148,18 +134,24 @@ type CollectRazberryResource struct {
 
 // Run the job CollectTeleinfoJob
 func (job *CollectRazberryJob) Run() {
+	// get mqtt client
+	var mqtt = mqtt_service.Service()
+
 	/**
 	 * store data
 	 */
 	for index := 0; index < len(job.devices); index++ {
 		var dev, err = job.razberry.DeviceById(job.devices[index])
 		if err == nil {
-			job.mgo.Insert(job.col, &CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()})
+			var data = CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()}
+			job.mgo.Insert(job.col, &data)
 			if err != nil {
 				logger.Default.Error("razberry", logger.Fields{
 					"data": &CollectRazberryResource{Name: job.devices[index], Device: dev, Timestamp: time.Now()},
 					"":     err,
 				})
+			} else {
+				mqtt.PublishData("/collect/teleinfo", data)
 			}
 		} else {
 			logger.Default.Error("razberry", logger.Fields{
